@@ -38,6 +38,7 @@ func generateShortURL() string {
 
 // Хендлер сокращения
 func Shorter(res http.ResponseWriter, req *http.Request) {
+	var mainURL string
 	//Проверка на метод
 	if req.Method != http.MethodPost {
 		getErrorCode400(res, "Ошибка")
@@ -50,18 +51,18 @@ func Shorter(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var originalURL string
+	originalURL := string(body)
 	if DynamicHostDns {
-		originalURL = string(body)
+		mainURL = string(body)
 	} else {
-		originalURL = "http://localhost:8080"
+		mainURL = "http://localhost:8080"
 	}
 
 	codeUrl := generateShortURL()
-	shortedCode := fmt.Sprintf("%s/%s", originalURL, codeUrl)
+	shortedCode := fmt.Sprintf("%s/%s", mainURL, codeUrl)
 
 	urlStore.Lock()
-	urlStore.m[shortedCode] = originalURL
+	urlStore.m[codeUrl] = originalURL
 	urlStore.Unlock()
 
 	res.WriteHeader(http.StatusCreated)
@@ -69,13 +70,35 @@ func Shorter(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(shortedCode))
 }
 
+// Обработчик для возврата полной строки
 func Fuller(res http.ResponseWriter, req *http.Request) {
-	res.Write([]byte("Расшировать"))
+	//В первые плачу что не могу использовать регулярку :D
+	id := req.URL.Path[1:]
+
+	urlStore.RLock()
+	originalURL, exists := urlStore.m[id]
+	urlStore.RUnlock()
+
+	if !exists {
+		getErrorCode400(res, "Ошибка")
+		return
+	}
+
+	// Перенаправление на оригинальный URL
+	res.Header().Set("Location", originalURL)
+	res.WriteHeader(http.StatusTemporaryRedirect)
 }
 
 func main() {
-	http.HandleFunc("/", Shorter)
-	http.HandleFunc("/{id}", Fuller)
+	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+		if req.Method == http.MethodPost {
+			Shorter(res, req)
+		} else if req.Method == http.MethodGet {
+			Fuller(res, req)
+		} else {
+			getErrorCode400(res, "Ошибка")
+		}
+	})
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("Ахтунг сервер прилег: %s\n", err)
