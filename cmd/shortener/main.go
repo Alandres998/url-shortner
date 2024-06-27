@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
-	"time"
 )
 
 var DynamicHostDns = false
@@ -27,7 +26,6 @@ func getErrorCode400(res http.ResponseWriter, errorText string) {
 
 // Функция шортер
 func generateShortURL() string {
-	rand.Seed(time.Now().UnixNano()) //А на каком вообще golang написаны тексты на 1.20 или ниже ?
 	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	shortURL := make([]byte, 8)
 	for i := range shortURL {
