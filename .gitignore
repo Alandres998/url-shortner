@@ -22,5 +22,7 @@ vendor/
 .idea
 .vscode
 
+# Тестирование
 cmd/shortener/go-debugger
 shortenerstress-darwin-amd64
+shortenerstress
