@@ -37,11 +37,6 @@ func generateShortURL() string {
 // Хендлер сокращения
 func Shorter(res http.ResponseWriter, req *http.Request) {
 	var mainURL string
-	//Проверка на метод
-	if req.Method != http.MethodPost {
-		getErrorCode400(res, "Ошибка")
-		return
-	}
 	//Проверка на метод и тело содержимого
 	body, err := io.ReadAll(req.Body)
 	if err != nil || len(body) == 0 {
@@ -49,15 +44,15 @@ func Shorter(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	originalURL := string(body)
 	if DynamicHostDNS {
-		mainURL = string(body)
+		mainURL = req.Host
 	} else {
 		mainURL = "http://localhost:8080"
 	}
 
 	codeURL := generateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", mainURL, codeURL)
+	originalURL := string(body)
 
 	urlStore.Lock()
 	urlStore.m[codeURL] = originalURL
