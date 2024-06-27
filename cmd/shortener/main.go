@@ -10,6 +10,7 @@ import (
 )
 
 var DynamicHostDNS = false
+var Error400DefaultText = "Ошибка"
 
 // Map для хранения сокращённых и оригинальных URL
 var urlStore = struct {
@@ -40,7 +41,7 @@ func Shorter(res http.ResponseWriter, req *http.Request) {
 	//Проверка на метод и тело содержимого
 	body, err := io.ReadAll(req.Body)
 	if err != nil || len(body) == 0 {
-		getErrorCode400(res, "Ошибка")
+		getErrorCode400(res, Error400DefaultText)
 		return
 	}
 
@@ -73,11 +74,11 @@ func Fuller(res http.ResponseWriter, req *http.Request) {
 	urlStore.RUnlock()
 
 	if !exists {
-		getErrorCode400(res, "Ошибка")
+		getErrorCode400(res, Error400DefaultText)
 		return
 	}
 
-	// Перенаправление на оригинальный URL
+	// Перенаправление на оригинальныйError400DefaultText URL
 	res.Header().Set("Location", originalURL)
 	res.WriteHeader(http.StatusTemporaryRedirect)
 }
@@ -89,7 +90,7 @@ func main() {
 		} else if req.Method == http.MethodGet {
 			Fuller(res, req)
 		} else {
-			getErrorCode400(res, "Ошибка")
+			getErrorCode400(res, Error400DefaultText)
 		}
 	})
 
