@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-var DynamicHostDns = false
+var DynamicHostDNS = false
 
 // Map для хранения сокращённых и оригинальных URL
 var urlStore = struct {
@@ -50,17 +50,17 @@ func Shorter(res http.ResponseWriter, req *http.Request) {
 	}
 
 	originalURL := string(body)
-	if DynamicHostDns {
+	if DynamicHostDNS {
 		mainURL = string(body)
 	} else {
 		mainURL = "http://localhost:8080"
 	}
 
-	codeUrl := generateShortURL()
-	shortedCode := fmt.Sprintf("%s/%s", mainURL, codeUrl)
+	codeURL := generateShortURL()
+	shortedCode := fmt.Sprintf("%s/%s", mainURL, codeURL)
 
 	urlStore.Lock()
-	urlStore.m[codeUrl] = originalURL
+	urlStore.m[codeURL] = originalURL
 	urlStore.Unlock()
 
 	res.WriteHeader(http.StatusCreated)
