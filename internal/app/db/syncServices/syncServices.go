@@ -2,24 +2,24 @@ package syncservices
 
 import "sync"
 
-type UrlMap struct {
+type URLMap struct {
 	sync.RWMutex
 	m map[string]string
 }
 
-var UrlStorage UrlMap
+var URLStorage URLMap
 
 func InitURLStorage() {
-	UrlStorage.m = make(map[string]string)
+	URLStorage.m = make(map[string]string)
 }
 
-func (Store UrlMap) Set(key string, value string) {
+func (Store URLMap) Set(key string, value string) {
 	Store.Lock()
 	Store.m[key] = value
 	Store.Unlock()
 }
 
-func (Store UrlMap) Get(key string) (string, bool) {
+func (Store URLMap) Get(key string) (string, bool) {
 	Store.RLock()
 	originalURL, exists := Store.m[key]
 	Store.RUnlock()

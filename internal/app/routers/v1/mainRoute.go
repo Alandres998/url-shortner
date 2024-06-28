@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"net/http"
 
 	webservices "github.com/Alandres998/url-shortner/internal/app/webServices"
@@ -13,7 +14,7 @@ func WebInterfaceShort(c *gin.Context) {
 		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
 		return
 	}
-	c.String(http.StatusCreated, responseText)
+	c.String(http.StatusCreated, fmt.Sprintf("%s%s", "тестГит", responseText))
 }
 
 func WebInterfaceFull(c *gin.Context) {

@@ -33,6 +33,6 @@ func Shorter(c *gin.Context) (string, error) {
 	shortedCode := fmt.Sprintf("%s/%s", MainURL, codeURL)
 	originalURL := string(body)
 
-	syncservices.UrlStorage.Set(codeURL, originalURL)
+	syncservices.URLStorage.Set(codeURL, originalURL)
 	return shortedCode, nil
 }

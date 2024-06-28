@@ -10,7 +10,7 @@ import (
 // Обработчик для возврата полной строки
 func Fuller(c *gin.Context) (string, error) {
 	id := c.Param("id")
-	originalURL, exists := syncservices.UrlStorage.Get(id)
+	originalURL, exists := syncservices.URLStorage.Get(id)
 	if !exists {
 		return "", errors.New(Error400DefaultText)
 	}
