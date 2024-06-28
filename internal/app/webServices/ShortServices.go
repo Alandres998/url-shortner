@@ -11,7 +11,7 @@ import (
 )
 
 var Error400DefaultText = "Ошибка"
-var MainUrl = "http://localhost:8080"
+var MainURL = "http://localhost:8080"
 
 func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -30,7 +30,7 @@ func Shorter(c *gin.Context) (string, error) {
 	}
 
 	codeURL := shorterservices.GenerateShortURL()
-	shortedCode := fmt.Sprintf("%s/%s", MainUrl, codeURL)
+	shortedCode := fmt.Sprintf("%s/%s", MainURL, codeURL)
 	originalURL := string(body)
 
 	syncservices.UrlStorage.Set(codeURL, originalURL)
