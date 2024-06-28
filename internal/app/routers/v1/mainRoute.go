@@ -17,5 +17,10 @@ func WebInterfaceShort(c *gin.Context) {
 }
 
 func WebInterfaceFull(c *gin.Context) {
-	c.String(http.StatusOK, "test")
+	responseText, err := webservices.Fuller(c)
+	if err != nil {
+		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
+		return
+	}
+	c.String(http.StatusTemporaryRedirect, responseText)
 }
