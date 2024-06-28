@@ -14,7 +14,7 @@ func WebInterfaceShort(c *gin.Context) {
 		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
 		return
 	}
-	c.String(http.StatusCreated, fmt.Sprintf("%s%s", "тестГит", responseText))
+	c.String(http.StatusCreated, fmt.Sprintf("%s", responseText))
 }
 
 func WebInterfaceFull(c *gin.Context) {
