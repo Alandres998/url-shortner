@@ -9,7 +9,7 @@ type UrlMap struct {
 
 var UrlStorage UrlMap
 
-func InitUrlStorage() {
+func InitURLStorage() {
 	UrlStorage.m = make(map[string]string)
 }
 
