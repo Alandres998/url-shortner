@@ -7,11 +7,11 @@ import (
 
 	shorterservices "github.com/Alandres998/url-shortner/internal/app/buslogic/shorterServices"
 	syncservices "github.com/Alandres998/url-shortner/internal/app/db/syncServices"
+	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
 var Error400DefaultText = "Ошибка"
-var MainURL = "http://localhost:8080"
 
 func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -30,7 +30,7 @@ func Shorter(c *gin.Context) (string, error) {
 	}
 
 	codeURL := shorterservices.GenerateShortURL()
-	shortedCode := fmt.Sprintf("%s/%s", MainURL, codeURL)
+	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
 	syncservices.URLStorage.Set(codeURL, originalURL)
