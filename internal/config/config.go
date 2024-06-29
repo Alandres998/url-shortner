@@ -12,6 +12,6 @@ type ServerConfig struct {
 }
 
 func init() {
-	flag.StringVar(&Options.ServerAdress.MainURLServer, "a", "localhost:8080", "basic main address")
+	flag.StringVar(&Options.ServerAdress.MainURLServer, "a", "8080", "basic main address")
 	flag.StringVar(&Options.ServerAdress.ShortURL, "b", "localhost:8080", "short response address")
 }
