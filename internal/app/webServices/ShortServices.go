@@ -28,9 +28,9 @@ func Shorter(c *gin.Context) (string, error) {
 	if err != nil || len(body) == 0 {
 		return "", errors.New(Error400DefaultText)
 	}
-	mainURL := config.GetAdressServer(config.Options.ServerAdress.ShortURL)
+	//mainURL := config.GetAdressServer()
 	codeURL := shorterservices.GenerateShortURL()
-	shortedCode := fmt.Sprintf("%s/%s", mainURL, codeURL)
+	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
 	syncservices.URLStorage.Set(codeURL, originalURL)
