@@ -2,6 +2,7 @@ package serverservices
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -17,10 +18,10 @@ func RunServer() {
 	syncservices.InitURLStorage()
 	routersInit := routers.InitRouter()
 	//Ех сейчас бы env
-	//endPoint := fmt.Sprintf(":%s", Port)
+	endPoint := fmt.Sprintf(":%s", config.Options.ServerAdress.MainURLServer)
 
 	server := &http.Server{
-		Addr:    config.Options.ServerAdress.MainURLServer,
+		Addr:    endPoint,
 		Handler: routersInit,
 	}
 
