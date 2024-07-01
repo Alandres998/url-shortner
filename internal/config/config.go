@@ -24,6 +24,11 @@ func InitConfig() {
 	loadEnv()
 }
 
+func GetAdressServer(Port string) string {
+	text := fmt.Sprintf("http://localhost%s", Port)
+	return text
+}
+
 func parseFlags() {
 	flag.StringVar(&Options.ServerAdress.MainURLServer, "a", ":8080", "basic main address")
 	flag.StringVar(&Options.ServerAdress.ShortURL, "b", "http://localhost:8080", "short response address")
@@ -37,8 +42,4 @@ func loadEnv() {
 	if envShortURL := os.Getenv("BASE_URL"); envShortURL != "" {
 		Options.ServerAdress.ShortURL = envShortURL
 	}
-}
-
-func GetAdressServer(Port string) string {
-	return fmt.Sprintf("http://localhost%s", Port)
 }

@@ -11,6 +11,7 @@ import (
 )
 
 func RunServer() {
+	config.InitConfig()
 	cfg := config.Options.ServerAdress
 	gin.SetMode(gin.ReleaseMode)
 	syncservices.InitURLStorage()
