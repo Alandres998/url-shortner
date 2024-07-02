@@ -1,4 +1,4 @@
-package shorterservices
+package shortener
 
 import "math/rand"
 

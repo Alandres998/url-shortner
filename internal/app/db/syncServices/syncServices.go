@@ -3,7 +3,7 @@ package syncservices
 import "sync"
 
 type URLMap struct {
-	sync.RWMutex
+	s sync.RWMutex
 	m map[string]string
 }
 
@@ -14,14 +14,14 @@ func InitURLStorage() {
 }
 
 func (Store *URLMap) Set(key string, value string) {
-	Store.Lock()
+	Store.s.Lock()
 	Store.m[key] = value
-	Store.Unlock()
+	Store.s.Unlock()
 }
 
 func (Store *URLMap) Get(key string) (string, bool) {
-	Store.RLock()
+	Store.s.RLock()
 	originalURL, exists := Store.m[key]
-	Store.RUnlock()
+	Store.s.RUnlock()
 	return originalURL, exists
 }
