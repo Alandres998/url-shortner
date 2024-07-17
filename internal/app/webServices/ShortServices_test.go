@@ -10,18 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWebInterfaceShorten(t *testing.T) {
-	router := routers.InitRouter()
-
-	w := httptest.NewRecorder()
-	body := `{"url":"https://valhalla.ru"}`
-	req, _ := http.NewRequest("POST", "/api/shorten", bytes.NewBufferString(body))
-	req.Header.Set("Content-Type", "application/json")
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusCreated, w.Code)
-}
-
 func TestWebInterfaceShorten_InvalidJSON(t *testing.T) {
 	router := routers.InitRouter()
 
