@@ -25,7 +25,7 @@ func InitRouter() *gin.Engine {
 
 	apiRouteGroup := r.Group("/api")
 	{
-		apiRouteGroup.POST("/shorten", v1.WebInterfaceShortenJson)
+		apiRouteGroup.POST("/shorten", v1.WebInterfaceShortenJSON)
 	}
 	return r
 }
