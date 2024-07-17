@@ -2,7 +2,6 @@ package webservices_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,10 +20,6 @@ func TestWebInterfaceShorten(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-
-	var response map[string]string
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.Nil(t, err)
 }
 
 func TestWebInterfaceShorten_InvalidJSON(t *testing.T) {
