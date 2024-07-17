@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"bytes"
 	"compress/gzip"
 	"io"
 	"net/http"
@@ -22,16 +23,31 @@ func GzipMiddleware() gin.HandlerFunc {
 			c.Request.Body = io.NopCloser(reader)
 		}
 
+		buffer := new(bytes.Buffer)
+		writer := &responseWriter{ResponseWriter: c.Writer, buffer: buffer}
+		c.Writer = writer
+
 		c.Next()
 
 		if strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") {
 			contentType := c.Writer.Header().Get("Content-Type")
 			if shouldCompress(contentType) {
 				c.Writer.Header().Set("Content-Encoding", "gzip")
+				c.Writer.Header().Del("Content-Length")
 				gz := gzip.NewWriter(c.Writer)
 				defer gz.Close()
-				c.Writer = &gzipWriter{Writer: gz, ResponseWriter: c.Writer}
+				_, err := gz.Write(buffer.Bytes())
+				if err != nil {
+					c.String(http.StatusInternalServerError, "Failed to compress response")
+					return
+				}
+				return
 			}
+		}
+
+		_, err := c.Writer.Write(buffer.Bytes())
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to write response")
 		}
 	}
 }
@@ -50,11 +66,15 @@ func shouldCompress(contentType string) bool {
 	return false
 }
 
-type gzipWriter struct {
+type responseWriter struct {
 	gin.ResponseWriter
-	Writer io.Writer
+	buffer *bytes.Buffer
 }
 
-func (w *gzipWriter) Write(data []byte) (int, error) {
-	return w.Writer.Write(data)
+func (w *responseWriter) Write(data []byte) (int, error) {
+	w.buffer.Write(data)
+	if w.Header().Get("Content-Encoding") == "gzip" {
+		return len(data), nil
+	}
+	return w.ResponseWriter.Write(data)
 }
