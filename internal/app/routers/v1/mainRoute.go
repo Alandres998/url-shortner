@@ -25,3 +25,12 @@ func WebInterfaceFull(c *gin.Context) {
 	}
 	c.Redirect(http.StatusTemporaryRedirect, responseHeaderLocation)
 }
+
+func WebInterfaceShortenJson(c *gin.Context) {
+	responseJson, err := webservices.ShorterJson(c)
+	if err != nil {
+		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
+		return
+	}
+	c.JSON(http.StatusOK, responseJson)
+}

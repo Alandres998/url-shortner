@@ -11,6 +11,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Эти две структуры хотел бы вынести в модели но пофакту это структура запроса и ответа
+// поэтому не стал выносить в сущность  models
+type ShortenRequest struct {
+	URL string `json:"url"`
+}
+
+type ShortenResponse struct {
+	Result string `json:"result"`
+}
+
 const Error400DefaultText = "Ошибка"
 
 func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
@@ -28,11 +38,25 @@ func Shorter(c *gin.Context) (string, error) {
 	if err != nil || len(body) == 0 {
 		return "", errors.New(Error400DefaultText)
 	}
-	//mainURL := config.GetAdressServer()
+
 	codeURL := shortener.GenerateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
 	syncservices.URLStorage.Set(codeURL, originalURL)
 	return shortedCode, nil
+}
+
+func ShorterJson(c *gin.Context) (ShortenResponse, error) {
+	var req ShortenRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		return ShortenResponse{}, errors.New(Error400DefaultText)
+	}
+
+	codeURL := shortener.GenerateShortURL()
+	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
+	res := ShortenResponse{Result: shortedCode}
+	return res, nil
 }

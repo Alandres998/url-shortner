@@ -22,5 +22,10 @@ func InitRouter() *gin.Engine {
 		mainRouteGroup.POST("/", v1.WebInterfaceShort)
 		mainRouteGroup.GET("/:id", v1.WebInterfaceFull)
 	}
+
+	apiRouteGroup := r.Group("/api")
+	{
+		apiRouteGroup.POST("/shorten", v1.WebInterfaceShortenJson)
+	}
 	return r
 }
