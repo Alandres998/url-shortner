@@ -1,6 +1,7 @@
 package webservices
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -48,9 +49,10 @@ func Shorter(c *gin.Context) (string, error) {
 }
 
 func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
-	var req ShortenRequest
+	req := new(ShortenRequest)
+	body, _ := io.ReadAll(c.Request.Body)
 
-	err := c.ShouldBindJSON(&req)
+	err := json.Unmarshal(body, req)
 	if err != nil {
 		return ShortenResponse{}, errors.New(Error400DefaultText)
 	}
