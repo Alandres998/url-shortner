@@ -27,10 +27,10 @@ func WebInterfaceFull(c *gin.Context) {
 }
 
 func WebInterfaceShortenJSON(c *gin.Context) {
-	responseJson, err := webservices.ShorterJson(c)
+	responseJSON, err := webservices.ShorterJson(c)
 	if err != nil {
 		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
 		return
 	}
-	c.JSON(http.StatusOK, responseJson)
+	c.JSON(http.StatusOK, responseJSON)
 }
