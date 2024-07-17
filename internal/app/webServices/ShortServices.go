@@ -47,7 +47,7 @@ func Shorter(c *gin.Context) (string, error) {
 	return shortedCode, nil
 }
 
-func ShorterJson(c *gin.Context) (ShortenResponse, error) {
+func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	var req ShortenRequest
 
 	err := c.ShouldBindJSON(&req)
