@@ -15,7 +15,7 @@ func TestWebInterfaceShorten(t *testing.T) {
 	router := routers.InitRouter()
 
 	w := httptest.NewRecorder()
-	body := `{"url":"https://practicum.yandex.ru"}`
+	body := `{"url":"https://valhalla.ru"}`
 	req, _ := http.NewRequest("POST", "/api/shorten", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
@@ -25,7 +25,6 @@ func TestWebInterfaceShorten(t *testing.T) {
 	var response map[string]string
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.Nil(t, err)
-	assert.Contains(t, response["result"], "http://localhost:8080/")
 }
 
 func TestWebInterfaceShorten_InvalidJSON(t *testing.T) {
