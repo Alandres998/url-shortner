@@ -12,6 +12,7 @@ import (
 func InitRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(middlewares.Logger())
+	r.Use(middlewares.GzipMiddleware())
 
 	r.NoRoute(func(c *gin.Context) {
 		webservices.GetErrorWithCode(c, webservices.Error400DefaultText, http.StatusBadRequest)
