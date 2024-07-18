@@ -39,14 +39,14 @@ func readOrCreateFile(filePath string) ([]URLData, error) {
 	// Проверяем существование файла
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		if err := os.WriteFile(filePath, []byte(""), 0644); err != nil {
-			return nil, fmt.Errorf("Файла не существует yt смог его создать: %v", err)
+			return nil, fmt.Errorf("файла не существует yt смог его создать: %v", err)
 		}
 	}
 
 	// Считываем данные из файла
 	fileData, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("Не смог открыть файл на чтение: %v", err)
+		return nil, fmt.Errorf("не смог открыть файл на чтение: %v", err)
 	}
 
 	// Разбираем JSON данные в структуры(объекты)
@@ -57,12 +57,12 @@ func readOrCreateFile(filePath string) ([]URLData, error) {
 		}
 		var item URLData
 		if err := json.Unmarshal(line, &item); err != nil {
-			return nil, fmt.Errorf("Не смог распарсить файл: %v", err)
+			return nil, fmt.Errorf("не удалось распарсить файл: %v", err)
 		}
 
 		num, err := strconv.Atoi(item.UUID)
 		if err != nil {
-			return nil, fmt.Errorf("Ошибка при преобразовании строки в число: %v", err)
+			return nil, fmt.Errorf("ошибка при преобразовании строки в число: %v", err)
 		}
 		if num > lastIncrement {
 			lastIncrement = num
