@@ -18,17 +18,19 @@ func TestGetURL(t *testing.T) {
 		{UUID: "2", ShortURL: "zfdsfsdf", OriginalURL: "http://valhalla.ru"},
 	}
 
+	// Тест 1: Проверяем существующий URL
 	found := GetURL("fsdfdsf")
 	if found == nil {
 		t.Error("Ожидалось, что найдем существующий URL, но не найдено")
-	}
-	if found.UUID != "1" || found.ShortURL != "fsdfdsf" || found.OriginalURL != "http://valhalla.com" {
-		t.Errorf("Неверные данные найденного URL: %+v", found)
+	} else {
+		if found.UUID != "1" || found.ShortURL != "fsdfdsf" || found.OriginalURL != "http://valhalla.com" {
+			t.Errorf("Неверные данные найденного URL: %+v", found)
+		}
 	}
 
 	// Тест 2: Проверяем отсутствующий URL
 	notFound := GetURL("werwegjdf")
 	if notFound != nil {
-		t.Error("Карамба мы нашли то чего нет")
+		t.Error("Не ожидали нахождение несуществующего URL")
 	}
 }
