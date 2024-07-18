@@ -31,14 +31,14 @@ func GzipMiddleware() gin.HandlerFunc {
 
 		if strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") {
 			contentType := c.Writer.Header().Get("Content-Type")
-			if shouldCompress(contentType) {
+			if shouldCompressContent(contentType) && avaibleCompressCode(c.Writer.Status()) {
 				c.Writer.Header().Set("Content-Encoding", "gzip")
 				c.Writer.Header().Del("Content-Length")
 				gz := gzip.NewWriter(c.Writer)
 				defer gz.Close()
 				_, err := gz.Write(buffer.Bytes())
 				if err != nil {
-					c.String(http.StatusInternalServerError, "Failed to compress response")
+					c.String(http.StatusInternalServerError, "Не смог записать в ответ")
 					return
 				}
 				return
@@ -47,13 +47,13 @@ func GzipMiddleware() gin.HandlerFunc {
 
 		_, err := c.Writer.Write(buffer.Bytes())
 		if err != nil {
-			c.String(http.StatusInternalServerError, "Failed to write response")
+			c.String(http.StatusInternalServerError, "Не смог записать в ответ")
 		}
 	}
 }
 
 // Проверяем можем ли зиповать такой тип ответа/запроса
-func shouldCompress(contentType string) bool {
+func shouldCompressContent(contentType string) bool {
 	compressibleTypes := []string{
 		"application/json",
 		"text/plain",
@@ -64,6 +64,19 @@ func shouldCompress(contentType string) bool {
 		}
 	}
 	return false
+}
+
+// Проверяем можем ли зиповать такой ответ с таким
+func avaibleCompressCode(CodeResponse int) bool {
+	notAvaibleTypeCode := []int{
+		http.StatusTemporaryRedirect,
+	}
+	for _, t := range notAvaibleTypeCode {
+		if CodeResponse == t {
+			return false
+		}
+	}
+	return true
 }
 
 type responseWriter struct {

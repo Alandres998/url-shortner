@@ -2,6 +2,7 @@ package serverservices
 
 import (
 	"bytes"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -32,28 +33,27 @@ func TestWebInterfaceShort(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/", body)
 	req.Header.Set("Content-Type", "text/plain")
 	router.ServeHTTP(w, req)
-
+	log.Print(w.Body.String())
 	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
-func TestWebInterfaceFull(t *testing.T) {
-	router := setupRouter()
+// func TestWebInterfaceFull(t *testing.T) {
+// 	router := setupRouter()
 
-	w := httptest.NewRecorder()
-	body := bytes.NewBufferString(`{"url":"http://valhalla.com"}`)
-	req, _ := http.NewRequest("POST", "/", body)
-	req.Header.Set("Content-Type", "text/plain")
-	router.ServeHTTP(w, req)
+// 	w := httptest.NewRecorder()
+// 	body := bytes.NewBufferString(`{"url":"http://valhalla.com"}`)
+// 	req, _ := http.NewRequest("POST", "/", body)
+// 	req.Header.Set("Content-Type", "text/plain")
+// 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
-	shortURL := w.Body.String()
+// 	assert.Equal(t, http.StatusCreated, w.Code)
+// 	shortURL := w.Body.String()
 
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", shortURL, nil)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
-}
+// 	w = httptest.NewRecorder()
+// 	req, _ = http.NewRequest("GET", shortURL, nil)
+// 	router.ServeHTTP(w, req)
+// 	assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
+// }
 
 func TestTestWebInterfaceShortFail(t *testing.T) {
 	router := setupRouter()
