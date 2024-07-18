@@ -82,15 +82,15 @@ func GetURL(shortURL string) *URLData {
 	return nil
 }
 
-func SaveUrl(shortUrl string, originalUrl string) URLData {
-	newShortUrl := URLData{
+func SaveURL(ShortURL string, OriginalURL string) URLData {
+	newShortURL := URLData{
 		UUID:        strconv.Itoa(lastIncrement + 1),
-		ShortURL:    shortUrl,
-		OriginalURL: originalUrl,
+		ShortURL:    ShortURL,
+		OriginalURL: OriginalURL,
 	}
-	urlData = append(urlData, newShortUrl)
-	WriteInStorage(newShortUrl)
-	return newShortUrl
+	urlData = append(urlData, newShortURL)
+	WriteInStorage(newShortURL)
+	return newShortURL
 }
 
 func WriteInStorage(shortURL URLData) {
