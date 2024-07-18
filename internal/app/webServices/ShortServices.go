@@ -44,7 +44,7 @@ func Shorter(c *gin.Context) (string, error) {
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
-	fileservices.SaveUrl(codeURL, originalURL)
+	fileservices.SaveURL(codeURL, originalURL)
 	return shortedCode, nil
 }
 
@@ -60,6 +60,6 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	codeURL := shortener.GenerateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	res := ShortenResponse{Result: shortedCode}
-	fileservices.SaveUrl(codeURL, req.URL)
+	fileservices.SaveURL(codeURL, req.URL)
 	return res, nil
 }
