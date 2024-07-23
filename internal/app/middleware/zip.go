@@ -16,7 +16,7 @@ func GzipMiddleware() gin.HandlerFunc {
 		if strings.Contains(c.GetHeader("Content-Encoding"), "gzip") {
 			reader, err := gzip.NewReader(c.Request.Body)
 			if err != nil {
-				c.AbortWithError(http.StatusBadRequest, errors.New("Контент не заархивирован"))
+				c.AbortWithError(http.StatusBadRequest, errors.New("контент не заархивирован"))
 				return
 			}
 			defer reader.Close()
@@ -38,7 +38,7 @@ func GzipMiddleware() gin.HandlerFunc {
 				defer gz.Close()
 				_, err := gz.Write(buffer.Bytes())
 				if err != nil {
-					c.String(http.StatusInternalServerError, "Не смог записать в ответ")
+					c.AbortWithError(http.StatusBadRequest, errors.New("не смог записать в ответ"))
 					return
 				}
 				return
