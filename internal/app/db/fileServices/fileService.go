@@ -25,10 +25,16 @@ var (
 )
 
 func InitFileStorage() {
-
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
 	lastIncrement = 0
 	urlSlice, err := readOrCreateFile(config.Options.FileStorage.Path)
 	if err != nil {
+		logger.Error("Инициализация стора",
+			zap.String("Ошибка при инициализации", err.Error()),
+		)
 		log.Panic("Не смог проиницировать файловое хранилище")
 	}
 	urlData = urlSlice
