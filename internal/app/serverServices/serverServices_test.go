@@ -2,7 +2,6 @@ package serverservices
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -33,7 +32,6 @@ func TestWebInterfaceShort(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/", body)
 	req.Header.Set("Content-Type", "text/plain")
 	router.ServeHTTP(w, req)
-	log.Print(w.Body.String())
 	assert.Equal(t, http.StatusCreated, w.Code)
 }
 

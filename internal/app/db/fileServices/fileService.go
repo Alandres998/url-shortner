@@ -1,7 +1,7 @@
 package fileservices
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/Alandres998/url-shortner/internal/config"
+	"go.uber.org/zap"
 )
 
 // URLData представляет данные о URL для сохранения в файл
@@ -35,23 +36,17 @@ func InitFileStorage() {
 
 func readOrCreateFile(filePath string) ([]URLData, error) {
 	var items []URLData
-
-	// Проверяем существование файла
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		if err := os.WriteFile(filePath, []byte(""), 0644); err != nil {
-			return nil, fmt.Errorf("файла не существует yt смог его создать: %v", err)
-		}
-	}
-
-	// Считываем данные из файла
-	fileData, err := os.ReadFile(filePath)
+	lastIncrement := 0
+	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("не смог открыть файл на чтение: %v", err)
+		return nil, fmt.Errorf("не удалось открыть файл: %v", err)
 	}
+	defer file.Close()
 
 	// Разбираем JSON данные в структуры(объекты)
-	lines := bytes.Split(fileData, []byte("\n"))
-	for _, line := range lines {
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Bytes()
 		if len(line) == 0 {
 			continue
 		}
@@ -98,21 +93,32 @@ func WriteInStorage(shortURL URLData) {
 		return
 	}
 
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
+	defer logger.Sync()
 	// Открываем файл для записи в конец
 	file, err := os.OpenFile(config.Options.FileStorage.Path, os.O_APPEND|config.Options.FileStorage.Mode, 0644)
 	if err != nil {
-		fmt.Printf("Ошибка не смог открыть файл для записи: %v\n", err)
+		logger.Error("Запись в файл store",
+			zap.String("ошибка", err.Error()),
+		)
 		return
 	}
 	defer file.Close()
 
 	jsonData, err := json.Marshal(shortURL)
 	if err != nil {
-		fmt.Printf("Ахтунг не преобразовал структуту в джсон %v\n", err)
+		logger.Error("Запись в файл store",
+			zap.String("Ахтунг не преобразовал структуту в джсон", err.Error()),
+		)
 		return
 	}
 	jsonData = append(jsonData, '\n')
 	if _, err := file.Write(jsonData); err != nil {
-		fmt.Printf("Не смог записать в файл структуру: %v\n", err)
+		logger.Error("Запись в файл store",
+			zap.String("Не смог записать в файл структуру", err.Error()),
+		)
 	}
 }

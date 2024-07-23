@@ -3,6 +3,7 @@ package middlewares
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -15,8 +16,7 @@ func GzipMiddleware() gin.HandlerFunc {
 		if strings.Contains(c.GetHeader("Content-Encoding"), "gzip") {
 			reader, err := gzip.NewReader(c.Request.Body)
 			if err != nil {
-				c.String(http.StatusBadRequest, "Контент не заархивирован")
-				c.Abort()
+				c.AbortWithError(http.StatusBadRequest, errors.New("Контент не заархивирован"))
 				return
 			}
 			defer reader.Close()

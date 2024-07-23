@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -8,7 +9,10 @@ import (
 )
 
 func Logger() gin.HandlerFunc {
-	logger, _ := zap.NewProduction()
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
 	defer logger.Sync()
 
 	return func(c *gin.Context) {
