@@ -1,15 +1,26 @@
 package webservices
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 
-	syncservices "github.com/Alandres998/url-shortner/internal/app/db/syncServices"
+	fileservices "github.com/Alandres998/url-shortner/internal/app/db/fileServices"
 	"github.com/Alandres998/url-shortner/internal/app/service/shortener"
 	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
 )
+
+// Эти две структуры хотел бы вынести в модели но пофакту это структура запроса и ответа
+// поэтому не стал выносить в сущность  models
+type ShortenRequest struct {
+	URL string `json:"url"`
+}
+
+type ShortenResponse struct {
+	Result string `json:"result"`
+}
 
 const Error400DefaultText = "Ошибка"
 
@@ -28,11 +39,27 @@ func Shorter(c *gin.Context) (string, error) {
 	if err != nil || len(body) == 0 {
 		return "", errors.New(Error400DefaultText)
 	}
-	//mainURL := config.GetAdressServer()
+
 	codeURL := shortener.GenerateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
-	syncservices.URLStorage.Set(codeURL, originalURL)
+	fileservices.SaveURL(codeURL, originalURL)
 	return shortedCode, nil
+}
+
+func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
+	req := new(ShortenRequest)
+	body, _ := io.ReadAll(c.Request.Body)
+
+	err := json.Unmarshal(body, req)
+	if err != nil {
+		return ShortenResponse{}, errors.New(Error400DefaultText)
+	}
+
+	codeURL := shortener.GenerateShortURL()
+	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
+	res := ShortenResponse{Result: shortedCode}
+	fileservices.SaveURL(codeURL, req.URL)
+	return res, nil
 }

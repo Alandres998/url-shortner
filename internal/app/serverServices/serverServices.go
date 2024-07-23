@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	syncservices "github.com/Alandres998/url-shortner/internal/app/db/syncServices"
+	fileservices "github.com/Alandres998/url-shortner/internal/app/db/fileServices"
 	"github.com/Alandres998/url-shortner/internal/app/routers"
 	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
@@ -14,7 +14,8 @@ func RunServer() {
 	config.InitConfig()
 	cfg := config.Options.ServerAdress
 	gin.SetMode(gin.ReleaseMode)
-	syncservices.InitURLStorage()
+	//syncservices.InitURLStorage()
+	fileservices.InitFileStorage()
 	routersInit := routers.InitRouter()
 
 	server := &http.Server{
