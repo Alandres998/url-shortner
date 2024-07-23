@@ -29,6 +29,7 @@ func InitFileStorage() {
 	if err != nil {
 		log.Fatalf("Не смог иницировать логгер")
 	}
+	defer logger.Sync()
 	lastIncrement = 0
 	urlSlice, err := readOrCreateFile(config.Options.FileStorage.Path)
 	if err != nil {
@@ -43,7 +44,7 @@ func InitFileStorage() {
 func readOrCreateFile(filePath string) ([]URLData, error) {
 	var items []URLData
 	lastIncrement := 0
-	file, err := os.Open(filePath)
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось открыть файл: %v", err)
 	}
