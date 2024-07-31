@@ -23,9 +23,9 @@ type FileStorageConfig struct {
 	Mode int
 }
 
-const STORAGE_TYPE_DB = "database"
-const STORAGE_TYPE_FILE = "file"
-const STORAGE_TYPE_MEMORY = "memory"
+const StorageTypeDB = "database"
+const StorageTypeFile = "file"
+const StorageTypeMemory = "memory"
 
 func InitConfig() {
 	if os.Getenv("RUN_MODE") == "test" {
@@ -77,10 +77,10 @@ func loadConfigFile() {
 
 func determineStorageType() {
 	if Options.DatabaseDSN != "" {
-		Options.StorageType = STORAGE_TYPE_DB
+		Options.StorageType = StorageTypeDB
 	} else if Options.FileStorage.Path != "" {
-		Options.StorageType = STORAGE_TYPE_FILE
+		Options.StorageType = StorageTypeFile
 	} else {
-		Options.StorageType = STORAGE_TYPE_MEMORY
+		Options.StorageType = StorageTypeMemory
 	}
 }

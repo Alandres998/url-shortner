@@ -7,14 +7,12 @@ import (
 	"os"
 	"testing"
 
-	syncservices "github.com/Alandres998/url-shortner/internal/app/db/syncServices"
 	"github.com/Alandres998/url-shortner/internal/app/routers"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 func setupRouter() *gin.Engine {
-	syncservices.InitURLStorage()
 	return routers.InitRouter()
 }
 
