@@ -36,6 +36,15 @@ func WebInterfaceShortenJSON(c *gin.Context) {
 	c.JSON(http.StatusCreated, responseJSON)
 }
 
+func WebInterfaceShortenJSONBatch(c *gin.Context) {
+	responseJSON, err := webservices.ShorterJSONBatch(c)
+	if err != nil {
+		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
+		return
+	}
+	c.JSON(http.StatusOK, responseJSON)
+}
+
 func WebInterfacePing(c *gin.Context) {
 	err := db.DB.Ping()
 	if err != nil {

@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
 	"github.com/Alandres998/url-shortner/internal/app/service/shortener"
 	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // Эти две структуры хотел бы вынести в модели но пофакту это структура запроса и ответа
@@ -20,6 +22,16 @@ type ShortenRequest struct {
 
 type ShortenResponse struct {
 	Result string `json:"result"`
+}
+
+type BatchRequest struct {
+	CorrelationID string `json:"correlation_id"`
+	OriginalURL   string `json:"original_url"`
+}
+
+type BatchResponse struct {
+	CorrelationID string `json:"correlation_id"`
+	ShortURL      string `json:"short_url"`
 }
 
 const Error400DefaultText = "Ошибка"
@@ -62,4 +74,35 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	res := ShortenResponse{Result: shortedCode}
 	storage.Store.Set(codeURL, req.URL)
 	return res, nil
+}
+
+func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
+	var batchRequests []BatchRequest
+	var batchResponses []BatchResponse
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("не смог иницировать логгер")
+	}
+
+	body, _ := io.ReadAll(c.Request.Body)
+
+	err = json.Unmarshal(body, &batchRequests)
+	if err != nil {
+		return batchResponses, errors.New(Error400DefaultText)
+	}
+
+	for _, req := range batchRequests {
+		shortURL := shortener.GenerateShortURL()
+		err := storage.Store.Set(shortURL, req.OriginalURL)
+		if err != nil {
+			logger.Error("запись в стор в баче",
+				zap.String("ошибка", err.Error()),
+			)
+		}
+		batchResponses = append(batchResponses, BatchResponse{
+			CorrelationID: req.CorrelationID,
+			ShortURL:      shortURL,
+		})
+	}
+	return batchResponses, nil
 }
