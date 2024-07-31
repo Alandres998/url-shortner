@@ -42,7 +42,7 @@ func WebInterfaceShortenJSONBatch(c *gin.Context) {
 		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
 		return
 	}
-	c.JSON(http.StatusOK, responseJSON)
+	c.JSON(http.StatusCreated, responseJSON)
 }
 
 func WebInterfacePing(c *gin.Context) {
