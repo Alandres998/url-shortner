@@ -43,7 +43,7 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 		)
 		return nil, err
 	}
-
+	DB = db
 	return &DBStorage{db: db}, nil
 }
 
