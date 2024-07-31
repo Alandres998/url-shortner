@@ -9,6 +9,7 @@ import (
 var Options struct {
 	ServerAdress ServerConfig
 	FileStorage  FileStorageConfig
+	DatabaseDSN  string
 }
 
 type ServerConfig struct {
@@ -39,6 +40,7 @@ func parseFlags() {
 	flag.StringVar(&Options.ServerAdress.MainURLServer, "a", ":8080", "basic main address")
 	flag.StringVar(&Options.ServerAdress.ShortURL, "b", "http://localhost:8080", "short response address")
 	flag.StringVar(&Options.FileStorage.Path, "f", "", "storage file")
+	flag.StringVar(&Options.DatabaseDSN, "d", "", "database DSN")
 	flag.Parse()
 }
 
@@ -51,6 +53,10 @@ func loadEnv() {
 	}
 	if envFileStorage := os.Getenv("FILE_STORAGE_PATH"); envFileStorage != "" {
 		Options.FileStorage.Path = envFileStorage
+	}
+
+	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
+		Options.DatabaseDSN = envDatabaseDSN
 	}
 }
 

@@ -3,6 +3,7 @@ package v1
 import (
 	"net/http"
 
+	"github.com/Alandres998/url-shortner/internal/app/db/db"
 	webservices "github.com/Alandres998/url-shortner/internal/app/webServices"
 	"github.com/gin-gonic/gin"
 )
@@ -33,4 +34,13 @@ func WebInterfaceShortenJSON(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, responseJSON)
+}
+
+func WebInterfacePing(c *gin.Context) {
+	err := db.DB.Ping()
+	if err != nil {
+		webservices.GetErrorWithCode(c, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }

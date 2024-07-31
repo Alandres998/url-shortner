@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Alandres998/url-shortner/internal/app/db/db"
 	fileservices "github.com/Alandres998/url-shortner/internal/app/db/fileServices"
 	"github.com/Alandres998/url-shortner/internal/app/routers"
 	"github.com/Alandres998/url-shortner/internal/config"
@@ -12,6 +13,7 @@ import (
 
 func RunServer() {
 	config.InitConfig()
+	db.InitDB()
 	cfg := config.Options.ServerAdress
 	gin.SetMode(gin.ReleaseMode)
 	//syncservices.InitURLStorage()
