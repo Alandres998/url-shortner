@@ -92,8 +92,9 @@ func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	}
 
 	for _, req := range batchRequests {
-		shortURL := shortener.GenerateShortURL()
-		err := storage.Store.Set(shortURL, req.OriginalURL)
+		codeURL := shortener.GenerateShortURL()
+		shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
+		err := storage.Store.Set(codeURL, req.OriginalURL)
 		if err != nil {
 			logger.Error("запись в стор в баче",
 				zap.String("ошибка", err.Error()),
@@ -101,7 +102,7 @@ func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 		}
 		batchResponses = append(batchResponses, BatchResponse{
 			CorrelationID: req.CorrelationID,
-			ShortURL:      shortURL,
+			ShortURL:      shortedCode,
 		})
 	}
 	return batchResponses, nil
