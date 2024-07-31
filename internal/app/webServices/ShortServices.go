@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	fileservices "github.com/Alandres998/url-shortner/internal/app/db/fileServices"
+	"github.com/Alandres998/url-shortner/internal/app/db/storage"
 	"github.com/Alandres998/url-shortner/internal/app/service/shortener"
 	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
@@ -44,7 +44,7 @@ func Shorter(c *gin.Context) (string, error) {
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
-	fileservices.SaveURL(codeURL, originalURL)
+	storage.Store.Set(codeURL, originalURL)
 	return shortedCode, nil
 }
 
@@ -60,6 +60,6 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	codeURL := shortener.GenerateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	res := ShortenResponse{Result: shortedCode}
-	fileservices.SaveURL(codeURL, req.URL)
+	storage.Store.Set(codeURL, req.URL)
 	return res, nil
 }

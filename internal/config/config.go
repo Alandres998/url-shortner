@@ -10,6 +10,7 @@ var Options struct {
 	ServerAdress ServerConfig
 	FileStorage  FileStorageConfig
 	DatabaseDSN  string
+	StorageType  string
 }
 
 type ServerConfig struct {
@@ -22,6 +23,10 @@ type FileStorageConfig struct {
 	Mode int
 }
 
+const STORAGE_TYPE_DB = "database"
+const STORAGE_TYPE_FILE = "file"
+const STORAGE_TYPE_MEMORY = "memory"
+
 func InitConfig() {
 	if os.Getenv("RUN_MODE") == "test" {
 		return
@@ -29,6 +34,7 @@ func InitConfig() {
 	parseFlags()
 	loadEnv()
 	loadConfigFile()
+	determineStorageType()
 }
 
 func GetAdressServer(Port string) string {
@@ -66,5 +72,15 @@ func loadConfigFile() {
 		Options.FileStorage.Mode = os.O_RDONLY
 	} else {
 		Options.FileStorage.Mode = os.O_RDWR
+	}
+}
+
+func determineStorageType() {
+	if Options.DatabaseDSN != "" {
+		Options.StorageType = STORAGE_TYPE_DB
+	} else if Options.FileStorage.Path != "" {
+		Options.StorageType = STORAGE_TYPE_FILE
+	} else {
+		Options.StorageType = STORAGE_TYPE_MEMORY
 	}
 }
