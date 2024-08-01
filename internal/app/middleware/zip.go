@@ -45,9 +45,11 @@ func GzipMiddleware() gin.HandlerFunc {
 			}
 		}
 
-		_, err := c.Writer.Write(buffer.Bytes())
-		if err != nil {
-			c.String(http.StatusInternalServerError, "Не смог записать в ответ")
+		if !strings.Contains(c.GetHeader("Accept-Encoding"), "identity") {
+			_, err := c.Writer.Write(buffer.Bytes())
+			if err != nil {
+				c.String(http.StatusInternalServerError, "Не смог записать в ответ")
+			}
 		}
 	}
 }
