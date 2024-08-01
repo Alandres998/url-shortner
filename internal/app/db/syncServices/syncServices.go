@@ -18,17 +18,17 @@ func NewMemoryStorage() storage.Storage {
 	}
 }
 
-func (Store *URLMap) Set(key string, value string) error {
-	Store.s.Lock()
-	defer Store.s.Unlock()
-	Store.m[key] = value
+func (store *URLMap) Set(key string, value string) error {
+	store.s.Lock()
+	defer store.s.Unlock()
+	store.m[key] = value
 	return nil
 }
 
-func (Store *URLMap) Get(key string) (string, error) {
-	Store.s.RLock()
-	defer Store.s.RUnlock()
-	value, exists := Store.m[key]
+func (store *URLMap) Get(key string) (string, error) {
+	store.s.RLock()
+	defer store.s.RUnlock()
+	value, exists := store.m[key]
 	if !exists {
 		return "", errors.New("key not found")
 	}
