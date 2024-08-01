@@ -56,8 +56,12 @@ func Shorter(c *gin.Context) (string, error) {
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
-	storage.Store.Set(codeURL, originalURL)
-	return shortedCode, nil
+	err = storage.Store.Set(codeURL, originalURL)
+	if err.Error() == storage.ErrURLExists.Error() {
+		UrlStore, _ := storage.Store.GetbyOriginURL(originalURL)
+		shortedCode = UrlStore.ShortURL
+	}
+	return shortedCode, err
 }
 
 func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
@@ -72,8 +76,12 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	codeURL := shortener.GenerateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	res := ShortenResponse{Result: shortedCode}
-	storage.Store.Set(codeURL, req.URL)
-	return res, nil
+	err = storage.Store.Set(codeURL, req.URL)
+	if err.Error() == storage.ErrURLExists.Error() {
+		UrlStore, _ := storage.Store.GetbyOriginURL(req.URL)
+		shortedCode = UrlStore.ShortURL
+	}
+	return res, err
 }
 
 func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
@@ -94,7 +102,7 @@ func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	for _, req := range batchRequests {
 		codeURL := shortener.GenerateShortURL()
 		shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
-		err := storage.Store.Set(codeURL, req.OriginalURL)
+		storage.Store.Set(codeURL, req.OriginalURL)
 		if err != nil {
 			logger.Error("запись в стор в баче",
 				zap.String("ошибка", err.Error()),

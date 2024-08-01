@@ -34,3 +34,15 @@ func (Store *URLMap) Get(key string) (string, error) {
 	}
 	return value, nil
 }
+
+func (store *URLMap) GetbyOriginURL(originalURL string) (storage.URLData, error) {
+	store.s.RLock()
+	defer store.s.RUnlock()
+
+	for key, data := range store.m {
+		if data == originalURL {
+			return storage.URLData{ShortURL: key, OriginalURL: data}, nil
+		}
+	}
+	return storage.URLData{}, nil
+}

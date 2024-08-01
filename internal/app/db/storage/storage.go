@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"time"
 )
 
@@ -14,6 +15,9 @@ type URLData struct {
 type Storage interface {
 	Set(key string, value string) error
 	Get(key string) (string, error)
+	GetbyOriginURL(key string) (URLData, error)
 }
+
+var ErrURLExists = errors.New("такой адрес уже есть")
 
 var Store Storage

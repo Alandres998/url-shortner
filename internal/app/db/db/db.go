@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 )
@@ -32,7 +33,7 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 	CREATE TABLE IF NOT EXISTS short_url (
 		id SERIAL PRIMARY KEY,
 		short_url TEXT NOT NULL,
-		original_url TEXT NOT NULL,
+		original_url TEXT NOT NULL UNIQUE,
 		date_created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`
 
@@ -53,6 +54,9 @@ func (s *DBStorage) Set(shortURL, originalURL string) error {
 	VALUES ($1, $2);`
 
 	_, err := s.db.Exec(query, shortURL, originalURL)
+	if err != nil && isUniqueViolation(err) {
+		return storage.ErrURLExists
+	}
 	return err
 }
 
@@ -68,4 +72,27 @@ func (s *DBStorage) Get(shortURL string) (string, error) {
 		return "", err
 	}
 	return originalURL, nil
+}
+
+func (s *DBStorage) GetbyOriginURL(originalURL string) (storage.URLData, error) {
+	query := `
+	SELECT id, short_url, original_url, date_created
+	FROM short_url
+	WHERE short_url = $1;`
+
+	var urlData storage.URLData
+	err := s.db.Get(&urlData, query, originalURL)
+	if err != nil {
+		return urlData, err
+	}
+	return urlData, nil
+}
+
+func isUniqueViolation(err error) bool {
+	if pgErr, ok := err.(*pq.Error); ok {
+		if pgErr.Code == "23505" {
+			return true
+		}
+	}
+	return false
 }

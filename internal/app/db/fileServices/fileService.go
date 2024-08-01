@@ -42,7 +42,7 @@ func (fs *FileStorage) initFileStorage() error {
 		logger.Error("Инициализация стора",
 			zap.String("Ошибка при инициализации", err.Error()),
 		)
-		log.Panic("Не смог проиницировать файловое хранилище")
+		log.Panic("Не смог проинициализировать файловое хранилище")
 	}
 	fs.urlData = urlSlice
 	return nil
@@ -121,7 +121,7 @@ func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
 	jsonData, err := json.Marshal(shortURL)
 	if err != nil {
 		logger.Error("Запись в файл store",
-			zap.String("Ахтунг не преобразовал структуту в джсон", err.Error()),
+			zap.String("Ахтунг не преобразовал структуру в джсон", err.Error()),
 		)
 		return
 	}
@@ -131,4 +131,13 @@ func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
 			zap.String("Не смог записать в файл структуру", err.Error()),
 		)
 	}
+}
+
+func (fs *FileStorage) GetbyOriginURL(originalURL string) (storage.URLData, error) { // Changed method name
+	for _, data := range fs.urlData {
+		if data.OriginalURL == originalURL {
+			return data, nil
+		}
+	}
+	return storage.URLData{}, nil
 }
