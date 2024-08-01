@@ -12,7 +12,7 @@ import (
 func WebInterfaceShort(c *gin.Context) {
 	responseText, err := webservices.Shorter(c)
 	statusCode := http.StatusCreated
-	if err.Error() == storage.ErrURLExists.Error() {
+	if err != nil && err.Error() == storage.ErrURLExists.Error() {
 		err = nil
 		statusCode = http.StatusConflict
 	}
@@ -36,7 +36,7 @@ func WebInterfaceFull(c *gin.Context) {
 func WebInterfaceShortenJSON(c *gin.Context) {
 	responseJSON, err := webservices.ShorterJSON(c)
 	statusCode := http.StatusCreated
-	if err.Error() == storage.ErrURLExists.Error() {
+	if err != nil && err.Error() == storage.ErrURLExists.Error() {
 		err = nil
 		statusCode = http.StatusConflict
 	}

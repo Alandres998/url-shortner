@@ -58,8 +58,8 @@ func Shorter(c *gin.Context) (string, error) {
 
 	err = storage.Store.Set(codeURL, originalURL)
 	if err != nil && err.Error() == storage.ErrURLExists.Error() {
-		UrlStore, _ := storage.Store.GetbyOriginURL(originalURL)
-		shortedCode = UrlStore.ShortURL
+		URLStore, _ := storage.Store.GetbyOriginURL(originalURL)
+		shortedCode = URLStore.ShortURL
 	}
 	return shortedCode, err
 }
@@ -78,8 +78,8 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	res := ShortenResponse{Result: shortedCode}
 	err = storage.Store.Set(codeURL, req.URL)
 	if err != nil && err.Error() == storage.ErrURLExists.Error() {
-		UrlStore, _ := storage.Store.GetbyOriginURL(req.URL)
-		shortedCode = UrlStore.ShortURL
+		URLStore, _ := storage.Store.GetbyOriginURL(req.URL)
+		res.Result = URLStore.ShortURL
 	}
 	return res, err
 }
@@ -107,6 +107,7 @@ func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 			logger.Error("запись в стор в баче",
 				zap.String("ошибка", err.Error()),
 			)
+			continue
 		}
 		batchResponses = append(batchResponses, BatchResponse{
 			CorrelationID: req.CorrelationID,
