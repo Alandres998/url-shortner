@@ -78,7 +78,7 @@ func (s *DBStorage) GetbyOriginURL(originalURL string) (storage.URLData, error) 
 	query := `
 	SELECT id, short_url, original_url, date_created
 	FROM short_url
-	WHERE short_url = $1;`
+	WHERE original_url = $1;`
 
 	var urlData storage.URLData
 	err := s.db.Get(&urlData, query, originalURL)

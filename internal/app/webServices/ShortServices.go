@@ -57,7 +57,7 @@ func Shorter(c *gin.Context) (string, error) {
 	originalURL := string(body)
 
 	err = storage.Store.Set(codeURL, originalURL)
-	if err.Error() == storage.ErrURLExists.Error() {
+	if err != nil && err.Error() == storage.ErrURLExists.Error() {
 		UrlStore, _ := storage.Store.GetbyOriginURL(originalURL)
 		shortedCode = UrlStore.ShortURL
 	}
@@ -77,7 +77,7 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	res := ShortenResponse{Result: shortedCode}
 	err = storage.Store.Set(codeURL, req.URL)
-	if err.Error() == storage.ErrURLExists.Error() {
+	if err != nil && err.Error() == storage.ErrURLExists.Error() {
 		UrlStore, _ := storage.Store.GetbyOriginURL(req.URL)
 		shortedCode = UrlStore.ShortURL
 	}
