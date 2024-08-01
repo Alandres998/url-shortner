@@ -26,7 +26,6 @@ func Logger() gin.HandlerFunc {
 
 		statusCode := c.Writer.Status()
 		contentLength := c.Writer.Size()
-
 		logger.Info("Request",
 			zap.String("url", c.Request.RequestURI),
 			zap.String("method", c.Request.Method),

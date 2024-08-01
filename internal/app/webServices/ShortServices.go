@@ -83,6 +83,19 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 		URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
 		res.Result = URLStore.ShortURL
 	}
+
+	logger, errLog := zap.NewProduction()
+	if errLog != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
+
+	defer logger.Sync()
+
+	logger.Info("Request",
+		zap.String("body-Response", string(res.Result)),
+		zap.String("body-Request", string(body)),
+	)
+
 	return res, err
 }
 
