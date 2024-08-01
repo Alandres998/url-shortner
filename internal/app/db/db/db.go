@@ -4,7 +4,6 @@ import (
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 )
 
