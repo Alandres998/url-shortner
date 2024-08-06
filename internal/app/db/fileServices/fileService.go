@@ -95,7 +95,7 @@ func (fs *FileStorage) Get(shortURL string) (string, error) {
 			return data.OriginalURL, nil
 		}
 	}
-	return "", errors.New("Такого адреса нет")
+	return "", errors.New("такого адреса нет")
 }
 
 func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
