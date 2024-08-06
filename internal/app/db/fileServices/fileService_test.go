@@ -33,7 +33,7 @@ func TestFileStorage(t *testing.T) {
 
 	_, err = fs.Get("Не существующий адрес")
 	assert.Error(t, err)
-	assert.Equal(t, "Такого адреса нет", err.Error())
+	assert.Equal(t, "такого адреса нет", err.Error())
 
 	urlData, err := fs.GetbyOriginURL(originalURL)
 	assert.NoError(t, err)
