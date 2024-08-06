@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -28,7 +29,8 @@ func GzipMiddleware() gin.HandlerFunc {
 		c.Writer = writer
 
 		c.Next()
-
+		test1 := c.GetHeader("User-Agent")
+		fmt.Print(test1)
 		if strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") {
 			contentType := c.Writer.Header().Get("Content-Type")
 			if shouldCompressContent(contentType) && avaibleCompressCode(c.Writer.Status()) {
@@ -45,7 +47,7 @@ func GzipMiddleware() gin.HandlerFunc {
 			}
 		}
 
-		if !strings.Contains(c.GetHeader("Accept-Encoding"), "identity") {
+		if !strings.Contains(c.GetHeader("Accept-Encoding"), "identity") && !strings.Contains(c.GetHeader("Accept-Encoding"), "") {
 			_, err := c.Writer.Write(buffer.Bytes())
 			if err != nil {
 				c.String(http.StatusInternalServerError, "Не смог записать в ответ")

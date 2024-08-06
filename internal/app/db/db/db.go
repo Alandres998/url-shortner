@@ -1,6 +1,9 @@
 package db
 
 import (
+	"context"
+	"time"
+
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -10,8 +13,6 @@ import (
 type DBStorage struct {
 	db *sqlx.DB
 }
-
-var DB *sqlx.DB
 
 func NewDBStorage(dsn string) (storage.Storage, error) {
 	logger, err := zap.NewProduction()
@@ -36,23 +37,29 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 		date_created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	_, err = db.Exec(createTableQuery)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	_, err = db.ExecContext(ctx, createTableQuery)
 	if err != nil {
 		logger.Error("Не удалось создать таблицу",
 			zap.String("Ошибка", err.Error()),
 		)
 		return nil, err
 	}
-	DB = db
+
 	return &DBStorage{db: db}, nil
 }
 
 func (s *DBStorage) Set(shortURL, originalURL string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	query := `
 	INSERT INTO short_url (short_url, original_url)
 	VALUES ($1, $2);`
 
-	_, err := s.db.Exec(query, shortURL, originalURL)
+	_, err := s.db.ExecContext(ctx, query, shortURL, originalURL)
 	if err != nil && isUniqueViolation(err) {
 		return storage.ErrURLExists
 	}
@@ -60,13 +67,16 @@ func (s *DBStorage) Set(shortURL, originalURL string) error {
 }
 
 func (s *DBStorage) Get(shortURL string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	query := `
 	SELECT original_url
 	FROM short_url
 	WHERE short_url = $1;`
 
 	var originalURL string
-	err := s.db.Get(&originalURL, query, shortURL)
+	err := s.db.GetContext(ctx, &originalURL, query, shortURL)
 	if err != nil {
 		return "", err
 	}
@@ -74,13 +84,16 @@ func (s *DBStorage) Get(shortURL string) (string, error) {
 }
 
 func (s *DBStorage) GetbyOriginURL(originalURL string) (storage.URLData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	query := `
 	SELECT id, short_url, original_url, date_created
 	FROM short_url
 	WHERE original_url = $1;`
 
 	var urlData storage.URLData
-	err := s.db.Get(&urlData, query, originalURL)
+	err := s.db.GetContext(ctx, &urlData, query, originalURL)
 	if err != nil {
 		return urlData, err
 	}
@@ -94,4 +107,11 @@ func isUniqueViolation(err error) bool {
 		}
 	}
 	return false
+}
+
+func (s *DBStorage) Ping() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	return s.db.PingContext(ctx)
 }

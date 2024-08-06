@@ -56,12 +56,32 @@ func Shorter(c *gin.Context) (string, error) {
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
-	err = storage.Store.Set(codeURL, originalURL)
-	if err != nil && err.Error() == storage.ErrURLExists.Error() {
-		URLStore, _ := storage.Store.GetbyOriginURL(originalURL)
-		URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
-		shortedCode = URLStore.ShortURL
+	logger, errLog := zap.NewProduction()
+	if errLog != nil {
+		log.Fatalf("Не смог иницировать логгер")
 	}
+
+	defer logger.Sync()
+
+	err = storage.Store.Set(codeURL, originalURL)
+
+	if err != nil {
+		if errors.Is(err, storage.ErrURLExists) {
+			URLStore, err := storage.Store.GetbyOriginURL(originalURL)
+			URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
+			shortedCode = URLStore.ShortURL
+			if err != nil {
+				logger.Error("Shorter Save Dublicate",
+					zap.String("Ошибка", string(err.Error())),
+				)
+			}
+		} else {
+			logger.Error("Shorter Save",
+				zap.String("Ошибка", string(err.Error())),
+			)
+		}
+	}
+
 	return shortedCode, err
 }
 
@@ -78,11 +98,6 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	res := ShortenResponse{Result: shortedCode}
 	err = storage.Store.Set(codeURL, req.URL)
-	if err != nil && err.Error() == storage.ErrURLExists.Error() {
-		URLStore, _ := storage.Store.GetbyOriginURL(req.URL)
-		URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
-		res.Result = URLStore.ShortURL
-	}
 
 	logger, errLog := zap.NewProduction()
 	if errLog != nil {
@@ -90,6 +105,19 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	}
 
 	defer logger.Sync()
+
+	if err != nil {
+		if errors.Is(err, storage.ErrURLExists) {
+			URLStore, _ := storage.Store.GetbyOriginURL(req.URL)
+			URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
+			res.Result = URLStore.ShortURL
+		} else {
+			logger.Error("ShortJSON Save",
+				zap.String("Ошибка", string(err.Error())),
+			)
+			return ShortenResponse{}, err
+		}
+	}
 
 	logger.Info("Request",
 		zap.String("body-Response", string(res.Result)),
@@ -101,7 +129,7 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 
 func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	var batchRequests []BatchRequest
-	var batchResponses []BatchResponse
+
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatalf("не смог иницировать логгер")
@@ -110,13 +138,15 @@ func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		return batchResponses, errors.New(Error400DefaultText)
+		return nil, errors.New(Error400DefaultText)
 	}
 
 	err = json.Unmarshal(body, &batchRequests)
 	if err != nil {
-		return batchResponses, errors.New(Error400DefaultText)
+		return nil, errors.New(Error400DefaultText)
 	}
+
+	batchResponses := make([]BatchResponse, 0, len(batchRequests))
 
 	for _, req := range batchRequests {
 		codeURL := shortener.GenerateShortURL()

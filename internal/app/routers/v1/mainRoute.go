@@ -3,7 +3,6 @@ package v1
 import (
 	"net/http"
 
-	"github.com/Alandres998/url-shortner/internal/app/db/db"
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
 	webservices "github.com/Alandres998/url-shortner/internal/app/webServices"
 	"github.com/gin-gonic/gin"
@@ -57,7 +56,7 @@ func WebInterfaceShortenJSONBatch(c *gin.Context) {
 }
 
 func WebInterfacePing(c *gin.Context) {
-	err := db.DB.Ping()
+	err := storage.Store.Ping()
 	if err != nil {
 		webservices.GetErrorWithCode(c, err.Error(), http.StatusInternalServerError)
 		return

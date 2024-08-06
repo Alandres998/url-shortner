@@ -16,6 +16,7 @@ type Storage interface {
 	Set(key string, value string) error
 	Get(key string) (string, error)
 	GetbyOriginURL(key string) (URLData, error)
+	Ping() error
 }
 
 var ErrURLExists = errors.New("такой адрес уже есть")

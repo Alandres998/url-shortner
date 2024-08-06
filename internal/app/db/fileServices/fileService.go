@@ -95,7 +95,7 @@ func (fs *FileStorage) Get(shortURL string) (string, error) {
 			return data.OriginalURL, nil
 		}
 	}
-	return "", errors.New("URL not found")
+	return "", errors.New("Такого адреса нет")
 }
 
 func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
@@ -140,4 +140,8 @@ func (fs *FileStorage) GetbyOriginURL(originalURL string) (storage.URLData, erro
 		}
 	}
 	return storage.URLData{}, nil
+}
+
+func (fs *FileStorage) Ping() error {
+	return nil
 }

@@ -1,48 +1,88 @@
 package serverservices
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/Alandres998/url-shortner/internal/app/db/storagefactory"
+	"github.com/Alandres998/url-shortner/internal/app/routers"
+	webservices "github.com/Alandres998/url-shortner/internal/app/webServices"
+	"github.com/Alandres998/url-shortner/internal/config"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
-// func setupRouter() *gin.Engine {
-// 	return routers.InitRouter()
-// }
+func setupRouter() *gin.Engine {
+	return routers.InitRouter()
+}
 
 func TestMain(m *testing.M) {
-	// os.Setenv("RUN_MODE", "test")
-	// code := m.Run()
-	// os.Exit(code)
+	os.Setenv("RUN_MODE", "test")
+	config.InitConfig()
+	storagefactory.NewStorage()
+	code := m.Run()
+	os.Exit(code)
 }
 
-func TestWebInterfaceShort(t *testing.T) {
-	// router := setupRouter()
+func TestShorten(t *testing.T) {
+	router := setupRouter()
 
-	// w := httptest.NewRecorder()
-	// body := bytes.NewBufferString(`{"url":"http://valhalla.com"}`)
-	// req, _ := http.NewRequest("POST", "/", body)
-	// req.Header.Set("Content-Type", "text/plain")
-	// router.ServeHTTP(w, req)
-	// assert.Equal(t, http.StatusCreated, w.Code)
+	body := bytes.NewBufferString(`http://valhalla.com`)
+	req, _ := http.NewRequest("POST", "/", body)
+	req.Header.Set("Content-Type", "text/plain")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
-func TestTestWebInterfaceShortFail(t *testing.T) {
-	// router := setupRouter()
-	// w := httptest.NewRecorder()
+func TestShortenJSON(t *testing.T) {
+	router := setupRouter()
 
-	// body := bytes.NewBufferString(`{"url":"http://example.com"}`)
-	// req, _ := http.NewRequest("PUT", "/", body)
-	// req.Header.Set("Content-Type", "text/plain")
-	// router.ServeHTTP(w, req)
+	body := `{"url": "http://valhalla.com"}`
+	req, _ := http.NewRequest("POST", "/api/shorten", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
 
-	// assert.Equal(t, http.StatusBadRequest, w.Code)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	// Тестируем, что вернулся правильный URL
+	var response webservices.ShortenResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, response.Result)
 }
 
-func TestWebInterfaceFullFail(t *testing.T) {
-	// router := setupRouter()
+func TestShortenJSONBatch(t *testing.T) {
+	router := setupRouter()
 
-	// w := httptest.NewRecorder()
-	// req, _ := http.NewRequest("GET", "testfail", nil)
-	// router.ServeHTTP(w, req)
+	batchRequest := []webservices.BatchRequest{
+		{CorrelationID: "1", OriginalURL: "http://example.com"},
+		{CorrelationID: "2", OriginalURL: "http://example.org"},
+	}
+	body, _ := json.Marshal(batchRequest)
 
-	// assert.Equal(t, http.StatusBadRequest, w.Code)
+	req, _ := http.NewRequest("POST", "/api/shorten/batch", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	// Тестируем, что вернулся правильный формат ответа
+	var responses []webservices.BatchResponse
+	err := json.Unmarshal(w.Body.Bytes(), &responses)
+	assert.NoError(t, err)
+	assert.Len(t, responses, 2)
+	for _, res := range responses {
+		assert.NotEmpty(t, res.ShortURL)
+	}
 }

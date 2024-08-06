@@ -30,7 +30,7 @@ func (store *URLMap) Get(key string) (string, error) {
 	defer store.s.RUnlock()
 	value, exists := store.m[key]
 	if !exists {
-		return "", errors.New("key not found")
+		return "", errors.New("Ключ не обнаружен")
 	}
 	return value, nil
 }
@@ -45,4 +45,8 @@ func (store *URLMap) GetbyOriginURL(originalURL string) (storage.URLData, error)
 		}
 	}
 	return storage.URLData{}, nil
+}
+
+func (store *URLMap) Ping() error {
+	return nil
 }
