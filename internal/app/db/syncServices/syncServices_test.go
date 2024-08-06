@@ -30,7 +30,7 @@ func TestURLMap_GetNonExistentKey(t *testing.T) {
 
 	_, err := storage.Get("ТутШото")
 	assert.Error(t, err)
-	assert.Equal(t, "Ключ не обнаружен", err.Error())
+	assert.Equal(t, "ключ не обнаружен", err.Error())
 }
 
 func TestURLMap_GetbyOriginURL(t *testing.T) {

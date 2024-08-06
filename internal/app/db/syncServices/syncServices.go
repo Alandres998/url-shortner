@@ -30,7 +30,7 @@ func (store *URLMap) Get(key string) (string, error) {
 	defer store.s.RUnlock()
 	value, exists := store.m[key]
 	if !exists {
-		return "", errors.New("Ключ не обнаружен")
+		return "", errors.New("ключ не обнаружен")
 	}
 	return value, nil
 }
