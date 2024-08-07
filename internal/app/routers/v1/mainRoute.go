@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
@@ -11,7 +12,7 @@ import (
 func WebInterfaceShort(c *gin.Context) {
 	responseText, err := webservices.Shorter(c)
 	statusCode := http.StatusCreated
-	if err != nil && err.Error() == storage.ErrURLExists.Error() {
+	if err != nil && errors.Is(err, storage.ErrURLExists) {
 		err = nil
 		statusCode = http.StatusConflict
 	}
@@ -35,7 +36,7 @@ func WebInterfaceFull(c *gin.Context) {
 func WebInterfaceShortenJSON(c *gin.Context) {
 	responseJSON, err := webservices.ShorterJSON(c)
 	statusCode := http.StatusCreated
-	if err != nil && err.Error() == storage.ErrURLExists.Error() {
+	if err != nil && errors.Is(err, storage.ErrURLExists) {
 		err = nil
 		statusCode = http.StatusConflict
 	}

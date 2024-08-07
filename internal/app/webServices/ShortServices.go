@@ -1,6 +1,7 @@
 package webservices
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,8 +15,9 @@ import (
 	"go.uber.org/zap"
 )
 
-// Эти две структуры хотел бы вынести в модели но пофакту это структура запроса и ответа
-// поэтому не стал выносить в сущность  models
+const Error400DefaultText = "Ошибка"
+
+// Определение типов для запросов и ответов
 type ShortenRequest struct {
 	URL string `json:"url"`
 }
@@ -34,8 +36,6 @@ type BatchResponse struct {
 	ShortURL      string `json:"short_url"`
 }
 
-const Error400DefaultText = "Ошибка"
-
 func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
@@ -44,9 +44,9 @@ func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 }
 
 func Shorter(c *gin.Context) (string, error) {
+	ctx := context.Background()
 	req := c.Request
 
-	//Проверка на метод и тело содержимого
 	body, err := io.ReadAll(req.Body)
 	if err != nil || len(body) == 0 {
 		return "", errors.New(Error400DefaultText)
@@ -63,11 +63,10 @@ func Shorter(c *gin.Context) (string, error) {
 
 	defer logger.Sync()
 
-	err = storage.Store.Set(codeURL, originalURL)
-
+	err = storage.Store.Set(ctx, codeURL, originalURL)
 	if err != nil {
 		if errors.Is(err, storage.ErrURLExists) {
-			URLStore, err := storage.Store.GetbyOriginURL(originalURL)
+			URLStore, err := storage.Store.GetbyOriginURL(ctx, originalURL)
 			URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
 			shortedCode = URLStore.ShortURL
 			if err != nil {
@@ -86,6 +85,7 @@ func Shorter(c *gin.Context) (string, error) {
 }
 
 func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
+	ctx := context.Background()
 	req := new(ShortenRequest)
 	body, _ := io.ReadAll(c.Request.Body)
 
@@ -97,7 +97,7 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	codeURL := shortener.GenerateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	res := ShortenResponse{Result: shortedCode}
-	err = storage.Store.Set(codeURL, req.URL)
+	err = storage.Store.Set(ctx, codeURL, req.URL)
 
 	logger, errLog := zap.NewProduction()
 	if errLog != nil {
@@ -108,7 +108,7 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 
 	if err != nil {
 		if errors.Is(err, storage.ErrURLExists) {
-			URLStore, _ := storage.Store.GetbyOriginURL(req.URL)
+			URLStore, _ := storage.Store.GetbyOriginURL(ctx, req.URL)
 			URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
 			res.Result = URLStore.ShortURL
 		} else {
@@ -128,6 +128,7 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 }
 
 func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
+	ctx := context.Background()
 	var batchRequests []BatchRequest
 
 	logger, err := zap.NewProduction()
@@ -151,7 +152,7 @@ func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	for _, req := range batchRequests {
 		codeURL := shortener.GenerateShortURL()
 		shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
-		err := storage.Store.Set(codeURL, req.OriginalURL)
+		err := storage.Store.Set(ctx, codeURL, req.OriginalURL)
 		if err != nil {
 			logger.Error("запись в стор в баче",
 				zap.String("ошибка", err.Error()),

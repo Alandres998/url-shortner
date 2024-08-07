@@ -18,14 +18,14 @@ func NewStorage() {
 	}
 	defer logger.Sync()
 
-	var storege storage.Storage
+	var store storage.Storage
 
 	if config.Options.DatabaseDSN != "" {
-		storege, err = db.NewDBStorage(config.Options.DatabaseDSN)
+		store, err = db.NewDBStorage(config.Options.DatabaseDSN)
 	} else if config.Options.FileStorage.Path != "" {
-		storege, err = fileservices.NewFileStorage(config.Options.FileStorage.Path)
+		store, err = fileservices.NewFileStorage(config.Options.FileStorage.Path)
 	} else {
-		storege, err = syncservices.NewMemoryStorage(), nil
+		store, err = syncservices.NewMemoryStorage(), nil
 	}
 
 	if err != nil {
@@ -34,5 +34,5 @@ func NewStorage() {
 		)
 		return
 	}
-	storage.Store = storege
+	storage.Store = store
 }

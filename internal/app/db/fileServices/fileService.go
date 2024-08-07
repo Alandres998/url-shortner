@@ -2,6 +2,7 @@ package fileservices
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -57,7 +58,6 @@ func (fs *FileStorage) readOrCreateFile(filePath string) ([]storage.URLData, err
 	}
 	defer file.Close()
 
-	// Разбираем JSON данные в структуры(объекты)
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -78,7 +78,7 @@ func (fs *FileStorage) readOrCreateFile(filePath string) ([]storage.URLData, err
 	return items, nil
 }
 
-func (fs *FileStorage) Set(shortURL, originalURL string) error {
+func (fs *FileStorage) Set(ctx context.Context, shortURL, originalURL string) error {
 	newShortURL := storage.URLData{
 		ID:          fs.lastIncrement + 1,
 		ShortURL:    shortURL,
@@ -89,7 +89,7 @@ func (fs *FileStorage) Set(shortURL, originalURL string) error {
 	return nil
 }
 
-func (fs *FileStorage) Get(shortURL string) (string, error) {
+func (fs *FileStorage) Get(ctx context.Context, shortURL string) (string, error) {
 	for _, data := range fs.urlData {
 		if data.ShortURL == shortURL {
 			return data.OriginalURL, nil
@@ -108,7 +108,7 @@ func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
 		log.Fatalf("Не смог иницировать логгер")
 	}
 	defer logger.Sync()
-	// Открываем файл для записи в конец
+
 	file, err := os.OpenFile(config.Options.FileStorage.Path, os.O_APPEND|config.Options.FileStorage.Mode, 0644)
 	if err != nil {
 		logger.Error("Запись в файл store",
@@ -133,7 +133,7 @@ func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
 	}
 }
 
-func (fs *FileStorage) GetbyOriginURL(originalURL string) (storage.URLData, error) { // Changed method name
+func (fs *FileStorage) GetbyOriginURL(ctx context.Context, originalURL string) (storage.URLData, error) {
 	for _, data := range fs.urlData {
 		if data.OriginalURL == originalURL {
 			return data, nil
@@ -142,6 +142,6 @@ func (fs *FileStorage) GetbyOriginURL(originalURL string) (storage.URLData, erro
 	return storage.URLData{}, nil
 }
 
-func (fs *FileStorage) Ping() error {
+func (fs *FileStorage) Ping(ctx context.Context) error {
 	return nil
 }

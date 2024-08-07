@@ -1,6 +1,7 @@
 package syncservices
 
 import (
+	"context"
 	"errors"
 	"sync"
 
@@ -18,14 +19,14 @@ func NewMemoryStorage() storage.Storage {
 	}
 }
 
-func (store *URLMap) Set(key string, value string) error {
+func (store *URLMap) Set(ctx context.Context, key string, value string) error {
 	store.s.Lock()
 	defer store.s.Unlock()
 	store.m[key] = value
 	return nil
 }
 
-func (store *URLMap) Get(key string) (string, error) {
+func (store *URLMap) Get(ctx context.Context, key string) (string, error) {
 	store.s.RLock()
 	defer store.s.RUnlock()
 	value, exists := store.m[key]
@@ -35,7 +36,7 @@ func (store *URLMap) Get(key string) (string, error) {
 	return value, nil
 }
 
-func (store *URLMap) GetbyOriginURL(originalURL string) (storage.URLData, error) {
+func (store *URLMap) GetbyOriginURL(ctx context.Context, originalURL string) (storage.URLData, error) {
 	store.s.RLock()
 	defer store.s.RUnlock()
 
@@ -47,6 +48,6 @@ func (store *URLMap) GetbyOriginURL(originalURL string) (storage.URLData, error)
 	return storage.URLData{}, nil
 }
 
-func (store *URLMap) Ping() error {
+func (store *URLMap) Ping(ctx context.Context) error {
 	return nil
 }

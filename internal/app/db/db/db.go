@@ -51,10 +51,7 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 	return &DBStorage{db: db}, nil
 }
 
-func (s *DBStorage) Set(shortURL, originalURL string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
+func (s *DBStorage) Set(ctx context.Context, shortURL, originalURL string) error {
 	query := `
 	INSERT INTO short_url (short_url, original_url)
 	VALUES ($1, $2);`
@@ -63,13 +60,10 @@ func (s *DBStorage) Set(shortURL, originalURL string) error {
 	if err != nil && isUniqueViolation(err) {
 		return storage.ErrURLExists
 	}
-	return err
+	return nil
 }
 
-func (s *DBStorage) Get(shortURL string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
+func (s *DBStorage) Get(ctx context.Context, shortURL string) (string, error) {
 	query := `
 	SELECT original_url
 	FROM short_url
@@ -83,10 +77,7 @@ func (s *DBStorage) Get(shortURL string) (string, error) {
 	return originalURL, nil
 }
 
-func (s *DBStorage) GetbyOriginURL(originalURL string) (storage.URLData, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
+func (s *DBStorage) GetbyOriginURL(ctx context.Context, originalURL string) (storage.URLData, error) {
 	query := `
 	SELECT id, short_url, original_url, date_created
 	FROM short_url
@@ -109,9 +100,6 @@ func isUniqueViolation(err error) bool {
 	return false
 }
 
-func (s *DBStorage) Ping() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
+func (s *DBStorage) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }
