@@ -9,6 +9,8 @@ import (
 var Options struct {
 	ServerAdress ServerConfig
 	FileStorage  FileStorageConfig
+	DatabaseDSN  string
+	StorageType  string
 }
 
 type ServerConfig struct {
@@ -21,6 +23,10 @@ type FileStorageConfig struct {
 	Mode int
 }
 
+const StorageTypeDB = "database"
+const StorageTypeFile = "file"
+const StorageTypeMemory = "memory"
+
 func InitConfig() {
 	if os.Getenv("RUN_MODE") == "test" {
 		return
@@ -28,6 +34,7 @@ func InitConfig() {
 	parseFlags()
 	loadEnv()
 	loadConfigFile()
+	determineStorageType()
 }
 
 func GetAdressServer(Port string) string {
@@ -39,6 +46,7 @@ func parseFlags() {
 	flag.StringVar(&Options.ServerAdress.MainURLServer, "a", ":8080", "basic main address")
 	flag.StringVar(&Options.ServerAdress.ShortURL, "b", "http://localhost:8080", "short response address")
 	flag.StringVar(&Options.FileStorage.Path, "f", "", "storage file")
+	flag.StringVar(&Options.DatabaseDSN, "d", "", "database DSN")
 	flag.Parse()
 }
 
@@ -52,6 +60,10 @@ func loadEnv() {
 	if envFileStorage := os.Getenv("FILE_STORAGE_PATH"); envFileStorage != "" {
 		Options.FileStorage.Path = envFileStorage
 	}
+
+	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
+		Options.DatabaseDSN = envDatabaseDSN
+	}
 }
 
 func loadConfigFile() {
@@ -60,5 +72,15 @@ func loadConfigFile() {
 		Options.FileStorage.Mode = os.O_RDONLY
 	} else {
 		Options.FileStorage.Mode = os.O_RDWR
+	}
+}
+
+func determineStorageType() {
+	if Options.DatabaseDSN != "" {
+		Options.StorageType = StorageTypeDB
+	} else if Options.FileStorage.Path != "" {
+		Options.StorageType = StorageTypeFile
+	} else {
+		Options.StorageType = StorageTypeMemory
 	}
 }

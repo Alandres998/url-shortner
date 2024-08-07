@@ -1,27 +1,53 @@
 package syncservices
 
-import "sync"
+import (
+	"context"
+	"errors"
+	"sync"
+
+	"github.com/Alandres998/url-shortner/internal/app/db/storage"
+)
 
 type URLMap struct {
 	s sync.RWMutex
 	m map[string]string
 }
 
-var URLStorage URLMap
-
-func InitURLStorage() {
-	URLStorage.m = make(map[string]string)
+func NewMemoryStorage() storage.Storage {
+	return &URLMap{
+		m: make(map[string]string),
+	}
 }
 
-func (Store *URLMap) Set(key string, value string) {
-	Store.s.Lock()
-	Store.m[key] = value
-	Store.s.Unlock()
+func (store *URLMap) Set(ctx context.Context, key string, value string) error {
+	store.s.Lock()
+	defer store.s.Unlock()
+	store.m[key] = value
+	return nil
 }
 
-func (Store *URLMap) Get(key string) (string, bool) {
-	Store.s.RLock()
-	originalURL, exists := Store.m[key]
-	Store.s.RUnlock()
-	return originalURL, exists
+func (store *URLMap) Get(ctx context.Context, key string) (string, error) {
+	store.s.RLock()
+	defer store.s.RUnlock()
+	value, exists := store.m[key]
+	if !exists {
+		return "", errors.New("ключ не обнаружен")
+	}
+	return value, nil
+}
+
+func (store *URLMap) GetbyOriginURL(ctx context.Context, originalURL string) (storage.URLData, error) {
+	store.s.RLock()
+	defer store.s.RUnlock()
+
+	for key, data := range store.m {
+		if data == originalURL {
+			return storage.URLData{ShortURL: key, OriginalURL: data}, nil
+		}
+	}
+	return storage.URLData{}, nil
+}
+
+func (store *URLMap) Ping(ctx context.Context) error {
+	return nil
 }

@@ -1,36 +1,49 @@
 package fileservices
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/Alandres998/url-shortner/internal/config"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestGetURL(t *testing.T) {
-	config.InitConfig()
-	InitFileStorage()
-	config.Options.FileStorage.Mode = os.O_RDWR
-	config.Options.FileStorage.Path = "/tmp/short-url-db.json"
-	// Добавляем данные для теста
-	urlData = []URLData{
-		{UUID: "1", ShortURL: "fsdfdsf", OriginalURL: "http://valhalla.com"},
-		{UUID: "2", ShortURL: "zfdsfsdf", OriginalURL: "http://valhalla.ru"},
-	}
+func TestFileStorage(t *testing.T) {
+	// Устанавливаем путь и режим для файлового хранилища
+	filePath := "/tmp/test-short-url-db.json"
+	mode := os.O_RDWR | os.O_CREATE
 
-	// Тест 1: Проверяем существующий URL
-	found := GetURL("fsdfdsf")
-	if found == nil {
-		t.Error("Ожидалось, что найдем существующий URL, но не найдено")
-	} else {
-		if found.UUID != "1" || found.ShortURL != "fsdfdsf" || found.OriginalURL != "http://valhalla.com" {
-			t.Errorf("Неверные данные найденного URL: %+v", found)
-		}
-	}
+	config.Options.FileStorage.Mode = mode
+	config.Options.FileStorage.Path = filePath
 
-	// Тест 2: Проверяем отсутствующий URL
-	notFound := GetURL("werwegjdf")
-	if notFound != nil {
-		t.Error("Не ожидали нахождение несуществующего URL")
-	}
+	fs, err := NewFileStorage(filePath)
+	assert.NoError(t, err)
+	assert.NotNil(t, fs)
+
+	defer os.Remove(filePath)
+
+	ctx := context.Background()
+
+	shortURL := "testShort"
+	originalURL := "http://valhalla.com"
+	err = fs.Set(ctx, shortURL, originalURL)
+	assert.NoError(t, err)
+
+	retrievedOriginalURL, err := fs.Get(ctx, shortURL)
+	assert.NoError(t, err)
+	assert.Equal(t, originalURL, retrievedOriginalURL)
+
+	_, err = fs.Get(ctx, "Не существующий адрес")
+	assert.Error(t, err)
+	assert.Equal(t, "такого адреса нет", err.Error())
+
+	urlData, err := fs.GetbyOriginURL(ctx, originalURL)
+	assert.NoError(t, err)
+	assert.Equal(t, shortURL, urlData.ShortURL)
+	assert.Equal(t, originalURL, urlData.OriginalURL)
+
+	// Тест 6: Проверяем Ping
+	err = fs.Ping(ctx)
+	assert.NoError(t, err)
 }

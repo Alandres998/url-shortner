@@ -1,0 +1,13 @@
+=== RUN   TestIteration10
+=== RUN   TestIteration10/TestLibraryUsage
+    iteration10_test.go:105: Не найдено использование библиотеки database/sql по пути ./
+=== RUN   TestIteration10/TestPingHandler
+=== NAME  TestIteration10
+    iteration10_test.go:94: Получен STDOUT лог процесса:
+        
+        {"level":"info","ts":1722417581.0969617,"caller":"middleware/logger.go:30","msg":"Request","url":"/ping","method":"GET","latency":0.000793954,"status_code":200,"content_length":15}
+        [GIN] 2024/07/31 - 09:19:41 | 200 |     852.244µs |             ::1 | GET      "/ping"
+--- FAIL: TestIteration10 (1.11s)
+    --- FAIL: TestIteration10/TestLibraryUsage (0.00s)
+    --- PASS: TestIteration10/TestPingHandler (1.01s)
+FAIL

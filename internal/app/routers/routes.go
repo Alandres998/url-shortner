@@ -21,12 +21,14 @@ func InitRouter() *gin.Engine {
 	mainRouteGroup := r.Group("/")
 	{
 		mainRouteGroup.POST("/", v1.WebInterfaceShort)
+		mainRouteGroup.GET("/ping", v1.WebInterfacePing)
 		mainRouteGroup.GET("/:id", v1.WebInterfaceFull)
 	}
 
 	apiRouteGroup := r.Group("/api")
 	{
 		apiRouteGroup.POST("/shorten", v1.WebInterfaceShortenJSON)
+		apiRouteGroup.POST("/shorten/batch", v1.WebInterfaceShortenJSONBatch)
 	}
 	return r
 }
