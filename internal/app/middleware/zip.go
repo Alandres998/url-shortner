@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -29,8 +28,7 @@ func GzipMiddleware() gin.HandlerFunc {
 		c.Writer = writer
 
 		c.Next()
-		test1 := c.GetHeader("User-Agent")
-		fmt.Print(test1)
+
 		if strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") {
 			contentType := c.Writer.Header().Get("Content-Type")
 			if shouldCompressContent(contentType) && avaibleCompressCode(c.Writer.Status()) {
