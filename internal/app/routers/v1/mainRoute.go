@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -57,7 +58,8 @@ func WebInterfaceShortenJSONBatch(c *gin.Context) {
 }
 
 func WebInterfacePing(c *gin.Context) {
-	err := storage.Store.Ping()
+	ctx := context.Background()
+	err := storage.Store.Ping(ctx)
 	if err != nil {
 		webservices.GetErrorWithCode(c, err.Error(), http.StatusInternalServerError)
 		return
