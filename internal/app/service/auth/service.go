@@ -92,11 +92,11 @@ func SetCookieUseInRequest(c *gin.Context) {
 		SetUserCookie(c, userID)
 		c.Set(CookieName, userID)
 		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
-		UserIDTemp = userID
+		//UserIDTemp = userID
 	} else {
 		c.Set(CookieName, cookie)
 		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
-		UserIDTemp = cookie
+		//UserIDTemp = cookie
 	}
 	logger.LoginInfo("Устанвка переменной с куки", UserIDTemp)
 }
