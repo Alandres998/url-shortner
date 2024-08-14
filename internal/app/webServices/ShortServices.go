@@ -145,17 +145,18 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	ctx := context.Background()
 	var batchRequests []BatchRequest
-
-	userID, err := auth.GetUserID(c)
-	if err != nil {
-		return nil, errors.New(Error400DefaultText)
-	}
-
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatalf("не смог иницировать логгер")
 	}
 	defer logger.Sync()
+
+	userID, err := auth.GetUserID(c)
+	if err != nil {
+		logger.Info("ShorterJsonBatch Save",
+			zap.String("Внимание", err.Error()),
+		)
+	}
 
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
