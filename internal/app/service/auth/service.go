@@ -53,7 +53,7 @@ func GetUserID(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie(CookieName)
 
 	if err != nil {
-		InfoCookie(c)
+		InfoCookie(c, "Пытаюсь взять пользователя из БД")
 		return "", errors.New("нет ключа в куках")
 	}
 
