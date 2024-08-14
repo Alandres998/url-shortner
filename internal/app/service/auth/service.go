@@ -30,7 +30,6 @@ func SignCookie(userID string) string {
 }
 
 func ValidateCookie(cookie string) bool {
-
 	parts := strings.Split(cookie, ":")
 	if len(parts) != 2 {
 		return false
@@ -54,22 +53,28 @@ func GetUserID(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie(CookieName)
 
 	if err != nil {
-		logger, errLog := zap.NewProduction()
-		defer logger.Sync()
-		if errLog != nil {
-			log.Fatalf("Не смог иницировать логгер")
-		}
-
-		cookies := c.Request.Cookies()
-		for _, cookie := range cookies {
-			logger.Info("Cookie Get",
-				zap.String("Name", cookie.Name),
-				zap.String("Value", cookie.Value),
-			)
-		}
-
+		InfoCookie(c)
 		return "", errors.New("нет ключа в куках")
 	}
 
 	return cookie, nil
+}
+
+func InfoCookie(c *gin.Context) {
+	logger, errLog := zap.NewProduction()
+	defer logger.Sync()
+	if errLog != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
+
+	cookies := c.Request.Cookies()
+	logger.Info("Cookie Get",
+		zap.String("Info", "пытаюсь получить куки"),
+	)
+	for _, cookie := range cookies {
+		logger.Info("Cookie Get",
+			zap.String("Name", cookie.Name),
+			zap.String("Value", cookie.Value),
+		)
+	}
 }

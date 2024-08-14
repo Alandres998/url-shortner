@@ -19,7 +19,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Set(auth.CookieName, cookie)
 			c.SetCookie(auth.CookieName, cookie, 3600, "/", "localhost", false, true)
 		}
-
+		auth.InfoCookie(c)
 		c.Next()
 	}
 }
