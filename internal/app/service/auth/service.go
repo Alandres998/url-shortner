@@ -19,7 +19,7 @@ import (
 const CookieName = "user_id"
 const secretKey = "kFHrlqA0"
 
-var UserIdTemp = ""
+var UserIDTemp = ""
 
 func GenerateUserID() string {
 	uid, _ := uuid.NewV4()
@@ -54,10 +54,10 @@ func SetUserCookie(c *gin.Context, userID string) {
 
 func GetUserID(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie(CookieName)
-	logger.LoginInfo("Берем глобальную переменную", UserIdTemp)
+	logger.LoginInfo("Берем глобальную переменную", UserIDTemp)
 	if err != nil {
-		if UserIdTemp != "" {
-			return UserIdTemp, nil
+		if UserIDTemp != "" {
+			return UserIDTemp, nil
 		} else {
 			return "", errors.New("нет ключа в куках")
 		}
@@ -92,11 +92,11 @@ func SetCookieUseInRequest(c *gin.Context) {
 		SetUserCookie(c, userID)
 		c.Set(CookieName, userID)
 		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
-		UserIdTemp = userID
+		UserIDTemp = userID
 	} else {
 		c.Set(CookieName, cookie)
 		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
-		UserIdTemp = cookie
+		UserIDTemp = cookie
 	}
-	logger.LoginInfo("Устанвка переменной с куки", UserIdTemp)
+	logger.LoginInfo("Устанвка переменной с куки", UserIDTemp)
 }

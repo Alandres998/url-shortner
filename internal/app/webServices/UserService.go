@@ -3,9 +3,11 @@ package webservices
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
 	"github.com/Alandres998/url-shortner/internal/app/service/auth"
+	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,7 +34,7 @@ func GetAllUserShorterURL(c *gin.Context) ([]ShortUserResponse, error) {
 	response := make([]ShortUserResponse, 0, len(storageArray))
 	for _, urlData := range storageArray {
 		response = append(response, ShortUserResponse{
-			ShortURL:    urlData.ShortURL,
+			ShortURL:    fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, urlData.ShortURL),
 			OriginalURL: urlData.OriginalURL,
 		})
 	}
