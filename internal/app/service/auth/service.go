@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -83,15 +84,22 @@ func LogHeader(c *gin.Context, action string) {
 		}
 	}
 }
+
 func SetCookieUseInRequest(c *gin.Context) {
 	cookie, err := c.Cookie(CookieName)
 	if err != nil || !ValidateCookie(cookie) {
 		userID := GenerateUserID()
 		SetUserCookie(c, userID)
 		c.Set(CookieName, userID)
+		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
 		UserIdTemp = userID
+		cookieText := fmt.Sprintf("user_id=%s; Path=/; HttpOnly", cookie)
+		c.Writer.Header().Set("Set-Cookie", cookieText)
 	} else {
 		c.Set(CookieName, cookie)
+		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
+		cookieText := fmt.Sprintf("user_id=%s; Path=/; HttpOnly", cookie)
+		c.Writer.Header().Set("Set-Cookie", cookieText)
 		UserIdTemp = cookie
 	}
 }
