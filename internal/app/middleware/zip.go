@@ -8,13 +8,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Alandres998/url-shortner/internal/app/service/auth"
 	"github.com/gin-gonic/gin"
 )
 
 func GzipMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		auth.LogHeader(c, "Лог до MiddlewareZip")
 		if strings.Contains(c.GetHeader("Content-Encoding"), "gzip") {
 			reader, err := gzip.NewReader(c.Request.Body)
 			if err != nil {
@@ -28,18 +26,17 @@ func GzipMiddleware() gin.HandlerFunc {
 		buffer := new(bytes.Buffer)
 		writer := &responseWriter{ResponseWriter: c.Writer, buffer: buffer}
 		c.Writer = writer
-		auth.SetCookieUseInRequest(c)
+
 		c.Next()
-		auth.SetCookieUseInRequest(c)
+
 		if strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") {
-			auth.LogHeader(c, "Лог zip MiddlewareZip")
 			contentType := c.Writer.Header().Get("Content-Type")
 			if shouldCompressContent(contentType) && avaibleCompressCode(c.Writer.Status()) {
 				c.Writer.Header().Set("Content-Encoding", "gzip")
 				c.Writer.Header().Del("Content-Length")
 				gz := gzip.NewWriter(c.Writer)
 				defer gz.Close()
-				auth.SetCookieUseInRequest(c)
+
 				_, err := gz.Write(buffer.Bytes())
 				if err != nil {
 					c.AbortWithError(http.StatusBadRequest, errors.New("не смог записать в ответ"))
@@ -50,9 +47,8 @@ func GzipMiddleware() gin.HandlerFunc {
 		}
 
 		if !strings.Contains(c.GetHeader("Accept-Encoding"), "identity") && !strings.Contains(c.GetHeader("Accept-Encoding"), "") {
-			auth.LogHeader(c, "Лог identity MiddlewareZip")
+
 			_, err := c.Writer.Write(buffer.Bytes())
-			auth.SetCookieUseInRequest(c)
 			if err != nil {
 				c.String(http.StatusInternalServerError, "Не смог записать в ответ")
 			}

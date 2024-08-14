@@ -5,12 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/Alandres998/url-shortner/internal/app/service/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"go.uber.org/zap"
@@ -54,7 +54,7 @@ func SetUserCookie(c *gin.Context, userID string) {
 
 func GetUserID(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie(CookieName)
-
+	logger.LoginInfo("Берем глобальную переменную", UserIdTemp)
 	if err != nil {
 		if UserIdTemp != "" {
 			return UserIdTemp, nil
@@ -93,13 +93,10 @@ func SetCookieUseInRequest(c *gin.Context) {
 		c.Set(CookieName, userID)
 		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
 		UserIdTemp = userID
-		cookieText := fmt.Sprintf("user_id=%s; Path=/; HttpOnly", cookie)
-		c.Writer.Header().Set("Set-Cookie", cookieText)
 	} else {
 		c.Set(CookieName, cookie)
 		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
-		cookieText := fmt.Sprintf("user_id=%s; Path=/; HttpOnly", cookie)
-		c.Writer.Header().Set("Set-Cookie", cookieText)
 		UserIdTemp = cookie
 	}
+	logger.LoginInfo("Устанвка переменной с куки", UserIdTemp)
 }
