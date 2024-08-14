@@ -60,16 +60,25 @@ func GetUserID(c *gin.Context) (string, error) {
 	return cookie, nil
 }
 
-func InfoCookie(c *gin.Context) {
+func InfoCookie(c *gin.Context, action string) {
 	logger, errLog := zap.NewProduction()
 	defer logger.Sync()
 	if errLog != nil {
 		log.Fatalf("Не смог иницировать логгер")
 	}
 
+	statusCode := c.Writer.Status()
+	contentLength := c.Writer.Size()
+	logger.Info("Request CookieInfo",
+		zap.String("url", c.Request.RequestURI),
+		zap.String("method", c.Request.Method),
+		zap.Int("status_code", statusCode),
+		zap.Int("content_length", contentLength),
+	)
+
 	cookies := c.Request.Cookies()
 	logger.Info("Cookie Get",
-		zap.String("Info", "пытаюсь получить куки"),
+		zap.String(action, "пытаюсь получить куки"),
 	)
 	for _, cookie := range cookies {
 		logger.Info("Cookie Get",
