@@ -6,13 +6,11 @@ import (
 	"net/http"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
-	"github.com/Alandres998/url-shortner/internal/app/service/auth"
 	webservices "github.com/Alandres998/url-shortner/internal/app/webServices"
 	"github.com/gin-gonic/gin"
 )
 
 func WebInterfaceShort(c *gin.Context) {
-	auth.AddCookie(c)
 	responseText, err := webservices.Shorter(c)
 	statusCode := http.StatusCreated
 	if err != nil && errors.Is(err, storage.ErrURLExists) {
@@ -37,7 +35,6 @@ func WebInterfaceFull(c *gin.Context) {
 }
 
 func WebInterfaceShortenJSON(c *gin.Context) {
-	auth.AddCookie(c)
 	responseJSON, err := webservices.ShorterJSON(c)
 	statusCode := http.StatusCreated
 	if err != nil && errors.Is(err, storage.ErrURLExists) {
@@ -52,7 +49,6 @@ func WebInterfaceShortenJSON(c *gin.Context) {
 }
 
 func WebInterfaceShortenJSONBatch(c *gin.Context) {
-	auth.AddCookie(c)
 	responseJSON, err := webservices.ShorterJSONBatch(c)
 	if err != nil {
 		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
@@ -72,7 +68,6 @@ func WebInterfacePing(c *gin.Context) {
 }
 
 func WebInterfaceGetAllShortURLByCookie(c *gin.Context) {
-	auth.AddCookie(c)
 	var statusCode int
 	var responseJSON []webservices.ShortUserResponse
 

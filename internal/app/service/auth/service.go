@@ -73,14 +73,3 @@ func GetUserID(c *gin.Context) (string, error) {
 
 	return cookie, nil
 }
-
-func AddCookie(c *gin.Context) {
-	cookie, err := c.Cookie(CookieName)
-	if err != nil || !ValidateCookie(cookie) {
-		userID := GenerateUserID()
-		SetUserCookie(c, userID)
-		c.Set(CookieName, userID)
-	} else {
-		c.Set(CookieName, cookie)
-	}
-}
