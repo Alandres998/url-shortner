@@ -7,7 +7,6 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
@@ -40,11 +39,9 @@ func ValidateCookie(cookie string) bool {
 
 func SetUserCookie(c *gin.Context, userID string) {
 	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     CookieName,
-		Value:    SignCookie(userID),
-		Path:     "/",
-		HttpOnly: true,
-		Expires:  time.Now().Add(24 * time.Hour),
+		Name:  CookieName,
+		Value: SignCookie(userID),
+		Path:  "/",
 	})
 }
 
