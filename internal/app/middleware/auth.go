@@ -21,20 +21,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			userID := auth.GenerateUserID()
 			auth.SetUserCookie(c, userID)
 			c.Set(auth.CookieName, userID)
-			c.SetCookie(auth.CookieName, userID, 3600, "/", "localhost", false, true)
-			logger.Info("Cookie Set",
-				zap.String("Name", auth.CookieName),
-				zap.String("Value", userID),
-			)
 		} else {
 			c.Set(auth.CookieName, cookie)
-			c.SetCookie(auth.CookieName, cookie, 3600, "/", "localhost", false, true)
-			logger.Info("Cookie Set",
-				zap.String("Name", auth.CookieName),
-				zap.String("Value", cookie),
-			)
 		}
-		auth.InfoCookie(c, "Действия после мидлваркеAUth")
 		c.Next()
 	}
 }

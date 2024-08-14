@@ -8,13 +8,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Alandres998/url-shortner/internal/app/service/auth"
 	"github.com/gin-gonic/gin"
 )
 
 func GzipMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		auth.InfoCookie(c, "Действия до мидлварке Zip")
 		if strings.Contains(c.GetHeader("Content-Encoding"), "gzip") {
 			reader, err := gzip.NewReader(c.Request.Body)
 			if err != nil {
@@ -31,7 +29,6 @@ func GzipMiddleware() gin.HandlerFunc {
 
 		c.Next()
 		if strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") {
-			auth.InfoCookie(c, "Действия сжатия Zip")
 			contentType := c.Writer.Header().Get("Content-Type")
 			if shouldCompressContent(contentType) && avaibleCompressCode(c.Writer.Status()) {
 				c.Writer.Header().Set("Content-Encoding", "gzip")
@@ -48,13 +45,11 @@ func GzipMiddleware() gin.HandlerFunc {
 		}
 
 		if !strings.Contains(c.GetHeader("Accept-Encoding"), "identity") && !strings.Contains(c.GetHeader("Accept-Encoding"), "") {
-			auth.InfoCookie(c, "Действия без сжатия")
 			_, err := c.Writer.Write(buffer.Bytes())
 			if err != nil {
 				c.String(http.StatusInternalServerError, "Не смог записать в ответ")
 			}
 		}
-		auth.InfoCookie(c, "Действия до после Zip middleware")
 	}
 }
 
