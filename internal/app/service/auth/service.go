@@ -76,3 +76,13 @@ func LogHeader(c *gin.Context, action string) {
 		}
 	}
 }
+func SetCookieUseInRequest(c *gin.Context) {
+	cookie, err := c.Cookie(CookieName)
+	if err != nil || !ValidateCookie(cookie) {
+		userID := GenerateUserID()
+		SetUserCookie(c, userID)
+		c.Set(CookieName, userID)
+	} else {
+		c.Set(CookieName, cookie)
+	}
+}

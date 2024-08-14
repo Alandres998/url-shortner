@@ -16,14 +16,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		log.Fatalf("Не смог иницировать логгер")
 	}
 	return func(c *gin.Context) {
-		cookie, err := c.Cookie(auth.CookieName)
-		if err != nil || !auth.ValidateCookie(cookie) {
-			userID := auth.GenerateUserID()
-			auth.SetUserCookie(c, userID)
-			c.Set(auth.CookieName, userID)
-		} else {
-			c.Set(auth.CookieName, cookie)
-		}
+		auth.SetCookieUseInRequest(c)
 		c.Next()
 	}
 }

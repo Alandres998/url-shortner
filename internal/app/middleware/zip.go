@@ -28,8 +28,9 @@ func GzipMiddleware() gin.HandlerFunc {
 		buffer := new(bytes.Buffer)
 		writer := &responseWriter{ResponseWriter: c.Writer, buffer: buffer}
 		c.Writer = writer
-
+		auth.SetCookieUseInRequest(c)
 		c.Next()
+		auth.SetCookieUseInRequest(c)
 		if strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") {
 			auth.LogHeader(c, "Лог zip MiddlewareZip")
 			contentType := c.Writer.Header().Get("Content-Type")
@@ -38,6 +39,7 @@ func GzipMiddleware() gin.HandlerFunc {
 				c.Writer.Header().Del("Content-Length")
 				gz := gzip.NewWriter(c.Writer)
 				defer gz.Close()
+				auth.SetCookieUseInRequest(c)
 				_, err := gz.Write(buffer.Bytes())
 				if err != nil {
 					c.AbortWithError(http.StatusBadRequest, errors.New("не смог записать в ответ"))
@@ -50,6 +52,7 @@ func GzipMiddleware() gin.HandlerFunc {
 		if !strings.Contains(c.GetHeader("Accept-Encoding"), "identity") && !strings.Contains(c.GetHeader("Accept-Encoding"), "") {
 			auth.LogHeader(c, "Лог identity MiddlewareZip")
 			_, err := c.Writer.Write(buffer.Bytes())
+			auth.SetCookieUseInRequest(c)
 			if err != nil {
 				c.String(http.StatusInternalServerError, "Не смог записать в ответ")
 			}
