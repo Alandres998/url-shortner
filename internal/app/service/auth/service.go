@@ -18,6 +18,8 @@ import (
 const CookieName = "user_id"
 const secretKey = "kFHrlqA0"
 
+var UserIdTemp = ""
+
 func GenerateUserID() string {
 	uid, _ := uuid.NewV4()
 	return uid.String()
@@ -53,7 +55,12 @@ func GetUserID(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie(CookieName)
 
 	if err != nil {
-		return "", errors.New("нет ключа в куках")
+		if UserIdTemp != "" {
+			return UserIdTemp, nil
+		} else {
+			return "", errors.New("нет ключа в куках")
+		}
+
 	}
 
 	return cookie, nil
@@ -82,7 +89,9 @@ func SetCookieUseInRequest(c *gin.Context) {
 		userID := GenerateUserID()
 		SetUserCookie(c, userID)
 		c.Set(CookieName, userID)
+		UserIdTemp = userID
 	} else {
 		c.Set(CookieName, cookie)
+		UserIdTemp = cookie
 	}
 }
