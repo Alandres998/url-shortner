@@ -5,12 +5,14 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
+	"go.uber.org/zap"
 )
 
 const CookieName = "user_id"
@@ -55,4 +57,22 @@ func GetUserID(c *gin.Context) (string, error) {
 	}
 
 	return cookie, nil
+}
+
+func LogHeader(c *gin.Context, action string) {
+	// Логируем все заголовки
+	logger, errLog := zap.NewProduction()
+	defer logger.Sync()
+	if errLog != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
+	headers := c.Request.Header
+	for key, values := range headers {
+		for _, value := range values {
+			logger.Info(action,
+				zap.String("header", key),
+				zap.String("value", value),
+			)
+		}
+	}
 }
