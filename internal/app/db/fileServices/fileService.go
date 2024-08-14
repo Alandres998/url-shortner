@@ -1,87 +1,146 @@
 package fileservices
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"os"
 	"sync"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
+	"github.com/Alandres998/url-shortner/internal/config"
+	"go.uber.org/zap"
 )
 
 type FileStorage struct {
-	filePath string
-	mu       sync.RWMutex
-	data     map[string]storage.URLData
+	filePath      string
+	mu            sync.RWMutex
+	urlData       []storage.URLData
+	lastIncrement int
 }
 
 func NewFileStorage(filePath string) (*FileStorage, error) {
 	fs := &FileStorage{
 		filePath: filePath,
-		data:     make(map[string]storage.URLData),
 	}
-	return fs, fs.loadData()
+	err := fs.initFileStorage()
+	if err != nil {
+		return nil, err
+	}
+	return fs, nil
 }
 
-func (fs *FileStorage) loadData() error {
-	fs.mu.Lock()
-	defer fs.mu.Unlock()
-
-	file, err := os.Open(fs.filePath)
+func (fs *FileStorage) initFileStorage() error {
+	logger, err := zap.NewProduction()
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
+		log.Fatalf("Не смог иницировать логгер")
+	}
+	defer logger.Sync()
+	fs.lastIncrement = 0
+	urlSlice, err := fs.readOrCreateFile(fs.filePath)
+	if err != nil {
+		logger.Error("Инициализация стора",
+			zap.String("Ошибка при инициализации", err.Error()),
+		)
+		log.Panic("Не смог проинициализировать файловое хранилище")
+	}
+	fs.urlData = urlSlice
+	return nil
+}
+
+func (fs *FileStorage) readOrCreateFile(filePath string) ([]storage.URLData, error) {
+	var items []storage.URLData
+	fs.lastIncrement = 0
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось открыть файл: %v", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if len(line) == 0 {
+			continue
 		}
-		return err
-	}
-	defer file.Close()
+		var item storage.URLData
+		if err := json.Unmarshal(line, &item); err != nil {
+			return nil, fmt.Errorf("не удалось распарсить файл: %v", err)
+		}
 
-	return json.NewDecoder(file).Decode(&fs.data)
+		if item.ID > fs.lastIncrement {
+			fs.lastIncrement = item.ID
+		}
+		items = append(items, item)
+	}
+
+	return items, nil
 }
 
-func (fs *FileStorage) saveData() error {
-	fs.mu.Lock()
-	defer fs.mu.Unlock()
+func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
+	if config.Options.FileStorage.Mode == os.O_RDONLY {
+		return
+	}
 
-	file, err := os.Create(fs.filePath)
+	logger, err := zap.NewProduction()
 	if err != nil {
-		return err
+		log.Fatalf("Не смог иницировать логгер")
+	}
+	defer logger.Sync()
+
+	file, err := os.OpenFile(config.Options.FileStorage.Path, os.O_APPEND|config.Options.FileStorage.Mode, 0644)
+	if err != nil {
+		logger.Error("Запись в файл store",
+			zap.String("ошибка", err.Error()),
+		)
+		return
 	}
 	defer file.Close()
 
-	return json.NewEncoder(file).Encode(fs.data)
+	jsonData, err := json.Marshal(shortURL)
+	if err != nil {
+		logger.Error("Запись в файл store",
+			zap.String("Ахтунг не преобразовал структуру в джсон", err.Error()),
+		)
+		return
+	}
+	jsonData = append(jsonData, '\n')
+	if _, err := file.Write(jsonData); err != nil {
+		logger.Error("Запись в файл store",
+			zap.String("Не смог записать в файл структуру", err.Error()),
+		)
+	}
 }
 
 func (fs *FileStorage) Set(ctx context.Context, userID, shortURL, originalURL string) error {
-	fs.mu.Lock()
-	defer fs.mu.Unlock()
-
-	fs.data[shortURL] = storage.URLData{
+	newShortURL := storage.URLData{
+		ID:          fs.lastIncrement + 1,
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
 		UserID:      userID,
 	}
-
-	return fs.saveData()
+	fs.urlData = append(fs.urlData, newShortURL)
+	fs.WriteInStorage(newShortURL)
+	return nil
 }
 
 func (fs *FileStorage) Get(ctx context.Context, shortURL string) (string, error) {
-	fs.mu.RLock()
-	defer fs.mu.RUnlock()
-
-	urlData, exists := fs.data[shortURL]
-	if !exists {
-		return "", errors.New("URL not found")
+	for _, data := range fs.urlData {
+		if data.ShortURL == shortURL {
+			return data.OriginalURL, nil
+		}
 	}
-	return urlData.OriginalURL, nil
+	return "", errors.New("такого адреса нет")
 }
 
 func (fs *FileStorage) GetbyOriginURL(ctx context.Context, originalURL string) (storage.URLData, error) {
 	fs.mu.RLock()
 	defer fs.mu.RUnlock()
 
-	for _, urlData := range fs.data {
+	for _, urlData := range fs.urlData {
 		if urlData.OriginalURL == originalURL {
 			return urlData, nil
 		}
@@ -94,7 +153,7 @@ func (fs *FileStorage) GetUserURLs(ctx context.Context, userID string) ([]storag
 	defer fs.mu.RUnlock()
 
 	var urls []storage.URLData
-	for _, urlData := range fs.data {
+	for _, urlData := range fs.urlData {
 		if urlData.UserID == userID {
 			urls = append(urls, urlData)
 		}

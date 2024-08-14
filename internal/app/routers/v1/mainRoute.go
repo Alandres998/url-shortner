@@ -67,7 +67,7 @@ func WebInterfacePing(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
-func WebInterfaceGetAllShortUrlByCookie(c *gin.Context) {
+func WebInterfaceGetAllShortURLByCookie(c *gin.Context) {
 	var statusCode int
 	var responseJSON []webservices.ShortUserResponse
 

@@ -19,7 +19,6 @@ func NewStorage() {
 	defer logger.Sync()
 
 	var store storage.Storage
-
 	if config.Options.DatabaseDSN != "" {
 		store, err = db.NewDBStorage(config.Options.DatabaseDSN)
 	} else if config.Options.FileStorage.Path != "" {
