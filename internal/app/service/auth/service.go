@@ -1,67 +1,85 @@
 package auth
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/Alandres998/url-shortner/internal/app/service/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
+	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 )
 
 const CookieName = "user_id"
 const secretKey = "kFHrlqA0"
 
-var UserIDTemp = ""
+var TempToken string
 
 func GenerateUserID() string {
 	uid, _ := uuid.NewV4()
 	return uid.String()
 }
 
-func SignCookie(userID string) string {
-	h := hmac.New(sha256.New, []byte(secretKey))
-	h.Write([]byte(userID))
-	return userID + ":" + hex.EncodeToString(h.Sum(nil))
+func GenerateJWT(userID string) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": userID,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	TempToken, err := token.SignedString([]byte(secretKey))
+	return TempToken, err
 }
 
-func ValidateCookie(cookie string) bool {
-	parts := strings.Split(cookie, ":")
-	if len(parts) != 2 {
-		return false
+func ValidateJWT(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("не прошла валидация")
+		}
+		return []byte(secretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
-	userID, signature := parts[0], parts[1]
-	expectedSignature := SignCookie(userID)
-	return hmac.Equal([]byte(signature), []byte(strings.Split(expectedSignature, ":")[1]))
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if _, ok := claims[CookieName].(string); !ok {
+			return nil, errors.New("нет ключа с id пользователя")
+		}
+	}
+	return token, nil
 }
 
 func SetUserCookie(c *gin.Context, userID string) {
+	jwt, err := GenerateJWT(GenerateUserID())
+	if err != nil {
+		logger.LoginInfo("Не смог сгенирорвать токен", err.Error())
+		return
+	}
+
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     CookieName,
-		Value:    SignCookie(userID),
+		Value:    jwt,
 		Path:     "/",
 		HttpOnly: true,
 		Expires:  time.Now().Add(24 * time.Hour),
 	})
+	c.Set(CookieName, jwt)
 }
 
 func GetUserID(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie(CookieName)
-	logger.LoginInfo("Берем глобальную переменную", UserIDTemp)
 	if err != nil {
-		if UserIDTemp != "" {
-			return UserIDTemp, nil
-		} else {
-			return "", errors.New("нет ключа в куках")
+		jwt, exists := c.Get(CookieName)
+		if exists {
+			if jwtString, ok := jwt.(string); ok {
+				return jwtString, nil
+			}
 		}
-
+		return "", errors.New("нет ключа в куках")
 	}
 
 	return cookie, nil
@@ -86,17 +104,30 @@ func LogHeader(c *gin.Context, action string) {
 }
 
 func SetCookieUseInRequest(c *gin.Context) {
-	cookie, err := c.Cookie(CookieName)
-	if err != nil || !ValidateCookie(cookie) {
-		userID := GenerateUserID()
-		SetUserCookie(c, userID)
-		c.Set(CookieName, userID)
-		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
-		//UserIDTemp = userID
-	} else {
-		c.Set(CookieName, cookie)
-		c.SetCookie(CookieName, cookie, 3600, "/", "localhost", false, true)
-		//UserIDTemp = cookie
+	token, err := c.Cookie(CookieName)
+
+	//Кейс токен отсутствует или ошибка генерирует новый
+	if token == "" || err != nil {
+		token, err = GenerateJWT(GenerateUserID())
+		if err != nil {
+			logger.LoginInfo("Не смог сгенирорвать токен", err.Error())
+			return
+		}
+		SetUserCookie(c, token)
+		return
 	}
-	logger.LoginInfo("Устанвка переменной с куки", UserIDTemp)
+
+	if token != "" {
+		_, err = ValidateJWT(token)
+		if err != nil {
+			token, err = GenerateJWT(GenerateUserID())
+			if err != nil {
+				logger.LoginInfo("Не смог сгенирорвать токен", err.Error())
+				return
+			}
+			SetUserCookie(c, token)
+		} else {
+			SetUserCookie(c, token)
+		}
+	}
 }
