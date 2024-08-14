@@ -34,6 +34,7 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 		id SERIAL PRIMARY KEY,
 		short_url TEXT NOT NULL,
 		original_url TEXT NOT NULL UNIQUE,
+		user_id TEXT,
 		date_created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`
 
@@ -51,12 +52,12 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 	return &DBStorage{db: db}, nil
 }
 
-func (s *DBStorage) Set(ctx context.Context, shortURL, originalURL string) error {
+func (s *DBStorage) Set(ctx context.Context, userID, shortURL, originalURL string) error {
 	query := `
-	INSERT INTO short_url (short_url, original_url)
-	VALUES ($1, $2);`
+	INSERT INTO short_url (short_url, original_url, user_id)
+	VALUES ($1, $2, $3);`
 
-	_, err := s.db.ExecContext(ctx, query, shortURL, originalURL)
+	_, err := s.db.ExecContext(ctx, query, shortURL, originalURL, userID)
 	if err != nil && isUniqueViolation(err) {
 		return storage.ErrURLExists
 	}
@@ -79,7 +80,7 @@ func (s *DBStorage) Get(ctx context.Context, shortURL string) (string, error) {
 
 func (s *DBStorage) GetbyOriginURL(ctx context.Context, originalURL string) (storage.URLData, error) {
 	query := `
-	SELECT id, short_url, original_url, date_created
+	SELECT id, short_url, original_url, user_id, date_created
 	FROM short_url
 	WHERE original_url = $1;`
 
@@ -102,4 +103,18 @@ func isUniqueViolation(err error) bool {
 
 func (s *DBStorage) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
+}
+
+func (s *DBStorage) GetUserURLs(ctx context.Context, userID string) ([]storage.URLData, error) {
+	query := `
+	SELECT id, short_url, original_url, user_id, date_created
+	FROM short_url
+	WHERE user_id = $1;`
+
+	var urls []storage.URLData
+	err := s.db.SelectContext(ctx, &urls, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	return urls, nil
 }

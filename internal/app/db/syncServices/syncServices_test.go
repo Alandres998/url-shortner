@@ -16,10 +16,11 @@ func TestURLMap_SetAndGet(t *testing.T) {
 	ctx := context.Background()
 	storage := NewMemoryStorage()
 
+	userID := "user123"
 	key := "Yandex"
 	value := "testValue"
 
-	err := storage.Set(ctx, key, value)
+	err := storage.Set(ctx, userID, key, value)
 	assert.NoError(t, err)
 
 	retrievedValue, err := storage.Get(ctx, key)
@@ -40,10 +41,11 @@ func TestURLMap_GetbyOriginURL(t *testing.T) {
 	ctx := context.Background()
 	storage := NewMemoryStorage()
 
+	userID := "user123"
 	key := "testKey"
 	value := "http://valhalla.com"
 
-	err := storage.Set(ctx, key, value)
+	err := storage.Set(ctx, userID, key, value)
 	assert.NoError(t, err)
 
 	urlData, err := storage.GetbyOriginURL(ctx, value)
