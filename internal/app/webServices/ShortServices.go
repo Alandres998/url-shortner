@@ -48,9 +48,18 @@ func Shorter(c *gin.Context) (string, error) {
 	ctx := context.Background()
 	req := c.Request
 
+	logger, errLog := zap.NewProduction()
+	if errLog != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
+
+	defer logger.Sync()
+
 	userID, err := auth.GetUserID(c)
 	if err != nil {
-		return "", errors.New(Error400DefaultText)
+		logger.Info("Shorter Save",
+			zap.String("Внимание", err.Error()),
+		)
 	}
 
 	body, err := io.ReadAll(req.Body)
@@ -61,13 +70,6 @@ func Shorter(c *gin.Context) (string, error) {
 	codeURL := shortener.GenerateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
-
-	logger, errLog := zap.NewProduction()
-	if errLog != nil {
-		log.Fatalf("Не смог иницировать логгер")
-	}
-
-	defer logger.Sync()
 
 	err = storage.Store.Set(ctx, userID, codeURL, originalURL)
 	if err != nil {
@@ -93,11 +95,20 @@ func Shorter(c *gin.Context) (string, error) {
 func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	ctx := context.Background()
 	req := new(ShortenRequest)
+	logger, errLog := zap.NewProduction()
+	if errLog != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
+
+	defer logger.Sync()
+
 	body, _ := io.ReadAll(c.Request.Body)
 
 	userID, err := auth.GetUserID(c)
 	if err != nil {
-		return ShortenResponse{}, errors.New(Error400DefaultText)
+		logger.Info("ShorterJson Save",
+			zap.String("Внимание", err.Error()),
+		)
 	}
 
 	err = json.Unmarshal(body, req)
@@ -109,13 +120,6 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	res := ShortenResponse{Result: shortedCode}
 	err = storage.Store.Set(ctx, userID, codeURL, req.URL)
-
-	logger, errLog := zap.NewProduction()
-	if errLog != nil {
-		log.Fatalf("Не смог иницировать логгер")
-	}
-
-	defer logger.Sync()
 
 	if err != nil {
 		if errors.Is(err, storage.ErrURLExists) {
