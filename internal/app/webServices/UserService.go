@@ -21,7 +21,7 @@ var Error204DefaultText = errors.New("у пользователя нет ни о
 
 func GetAllUserShorterURL(c *gin.Context) ([]ShortUserResponse, error) {
 	ctx := context.Background()
-	userID, err := auth.GetUserID(c)
+	userID, err := auth.GetUserIDByCookie(c)
 	if err != nil {
 		return []ShortUserResponse{}, Error401DefaultText
 	}

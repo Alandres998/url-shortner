@@ -16,8 +16,6 @@ import (
 const CookieName = "user_id"
 const secretKey = "kFHrlqA0"
 
-var TempToken string
-
 func GenerateUserID() string {
 	uid, _ := uuid.NewV4()
 	return uid.String()
@@ -29,8 +27,7 @@ func GenerateJWT(userID string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	TempToken, err := token.SignedString([]byte(secretKey))
-	return TempToken, err
+	return token.SignedString([]byte(secretKey))
 }
 
 func ValidateJWT(tokenString string) (*jwt.Token, error) {
@@ -82,6 +79,14 @@ func GetUserID(c *gin.Context) (string, error) {
 		return "", errors.New("нет ключа в куках")
 	}
 
+	return cookie, nil
+}
+
+func GetUserIDByCookie(c *gin.Context) (string, error) {
+	cookie, err := c.Cookie(CookieName)
+	if err != nil {
+		return "", errors.New("нет ключа в куках")
+	}
 	return cookie, nil
 }
 
