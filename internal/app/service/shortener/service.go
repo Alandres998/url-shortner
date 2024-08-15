@@ -19,7 +19,7 @@ func GenerateShortURL() string {
 }
 
 func DeleteShortURL(userID string, shortURLs []string) {
-	batchSize := 2
+	batchSize := 10
 	urlChan := make(chan string, len(shortURLs))
 	var wg sync.WaitGroup
 
