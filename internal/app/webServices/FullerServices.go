@@ -2,7 +2,6 @@ package webservices
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
 	"github.com/gin-gonic/gin"
@@ -14,7 +13,7 @@ func Fuller(c *gin.Context) (string, error) {
 	id := c.Param("id")
 	urlOriginal, err := storage.Store.Get(ctx, id)
 	if err != nil {
-		return "", errors.New(Error400DefaultText)
+		return "", err
 	}
 	return urlOriginal, nil
 }

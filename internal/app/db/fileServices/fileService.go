@@ -164,3 +164,55 @@ func (fs *FileStorage) GetUserURLs(ctx context.Context, userID string) ([]storag
 func (fs *FileStorage) Ping(ctx context.Context) error {
 	return nil
 }
+
+func (fs *FileStorage) DeleteUserURL(ctx context.Context, shortURLs []string, userID string) error {
+	fs.mu.Lock()
+	defer fs.mu.Unlock()
+
+	urlSet := make(map[string]struct{}, len(shortURLs))
+	for _, url := range shortURLs {
+		urlSet[url] = struct{}{}
+	}
+
+	updated := false
+	for i, urlData := range fs.urlData {
+		if _, found := urlSet[urlData.ShortURL]; found && urlData.UserID == userID {
+			fs.urlData[i].Deleted = true
+			updated = true
+		}
+	}
+
+	if updated {
+		fs.writeAllData()
+		return nil
+	}
+
+	return errors.New("не удалось найти соответствующие URL для удаления")
+}
+
+func (fs *FileStorage) writeAllData() {
+	file, err := os.OpenFile(fs.filePath, os.O_TRUNC|os.O_RDWR, 0666)
+	if err != nil {
+		zap.L().Error("Ошибка при открытии айла", zap.Error(err))
+		return
+	}
+	defer file.Close()
+
+	for _, urlData := range fs.urlData {
+		jsonData, err := json.Marshal(urlData)
+		if err != nil {
+			zap.L().Error("ошибка при серилизиации данных", zap.Error(err))
+			return
+		}
+		_, err = file.Write(jsonData)
+		if err != nil {
+			zap.L().Error("ошибка записи в файл", zap.Error(err))
+			return
+		}
+		_, err = file.WriteString("\n")
+		if err != nil {
+			zap.L().Error("не смог записать сущность в файл", zap.Error(err))
+			return
+		}
+	}
+}

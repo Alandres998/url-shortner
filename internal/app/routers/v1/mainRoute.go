@@ -28,8 +28,14 @@ func WebInterfaceShort(c *gin.Context) {
 func WebInterfaceFull(c *gin.Context) {
 	responseHeaderLocation, err := webservices.Fuller(c)
 	if err != nil {
-		webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
-		return
+		if errors.Is(err, storage.ErrURLDeleted) {
+			webservices.GetErrorWithCode(c, err.Error(), http.StatusGone)
+			return
+		} else {
+			webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
+			return
+		}
+
 	}
 	c.Redirect(http.StatusTemporaryRedirect, responseHeaderLocation)
 }
@@ -88,4 +94,15 @@ func WebInterfaceGetAllShortURLByCookie(c *gin.Context) {
 		responseJSON = userURLs
 	}
 	c.JSON(statusCode, responseJSON)
+}
+
+func WebInterfaceDeleteShortUrl(c *gin.Context) {
+	var statusCode int
+	err := webservices.DeleteShortURL(c)
+	if err != nil {
+		statusCode = http.StatusBadRequest
+	} else {
+		statusCode = http.StatusAccepted
+	}
+	c.String(statusCode, "")
 }

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
@@ -35,7 +36,8 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 		short_url TEXT NOT NULL,
 		original_url TEXT NOT NULL UNIQUE,
 		user_id TEXT,
-		date_created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		date_created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		is_deleted boolean
 	);`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -66,21 +68,26 @@ func (s *DBStorage) Set(ctx context.Context, userID, shortURL, originalURL strin
 
 func (s *DBStorage) Get(ctx context.Context, shortURL string) (string, error) {
 	query := `
-	SELECT original_url
+	SELECT id, short_url, original_url, user_id, date_created, is_deleted
 	FROM short_url
 	WHERE short_url = $1;`
 
-	var originalURL string
-	err := s.db.GetContext(ctx, &originalURL, query, shortURL)
+	var urlData storage.URLData
+	err := s.db.GetContext(ctx, &urlData, query, shortURL)
 	if err != nil {
 		return "", err
 	}
-	return originalURL, nil
+
+	if urlData.Deleted {
+		return urlData.OriginalURL, storage.ErrURLDeleted
+	}
+
+	return urlData.OriginalURL, nil
 }
 
 func (s *DBStorage) GetbyOriginURL(ctx context.Context, originalURL string) (storage.URLData, error) {
 	query := `
-	SELECT id, short_url, original_url, user_id, date_created
+	SELECT id, short_url, original_url, user_id, date_created, is_deleted
 	FROM short_url
 	WHERE original_url = $1;`
 
@@ -117,4 +124,20 @@ func (s *DBStorage) GetUserURLs(ctx context.Context, userID string) ([]storage.U
 		return nil, err
 	}
 	return urls, nil
+}
+
+func (s *DBStorage) DeleteUserURL(ctx context.Context, shortURLs []string, userID string) error {
+	query := `
+	UPDATE short_url
+	SET is_deleted = TRUE
+	WHERE short_url = ANY($1) AND user_id = $2;`
+
+	test, err := s.db.ExecContext(ctx, query, pq.Array(shortURLs), userID)
+	test2, _ := test.RowsAffected()
+	fmt.Print(test2)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -68,3 +68,19 @@ func (store *URLMap) GetUserURLs(ctx context.Context, userID string) ([]storage.
 func (store *URLMap) Ping(ctx context.Context) error {
 	return nil
 }
+
+func (store *URLMap) DeleteUserURL(ctx context.Context, shortURLs []string, userID string) error {
+	store.s.Lock()
+	defer store.s.Unlock()
+
+	for _, shortURL := range shortURLs {
+		urlData, exists := store.m[shortURL]
+		if !exists || urlData.UserID != userID {
+			continue
+		}
+		urlData.Deleted = true
+		store.m[shortURL] = urlData
+	}
+
+	return nil
+}
