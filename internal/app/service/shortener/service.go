@@ -19,12 +19,6 @@ func GenerateShortURL() string {
 }
 
 func DeleteShortURL(userID string, shortURLs []string) {
-	// go func() {
-	// 	err := storage.Store.DeleteUserURL(context.Background(), shortURLs, userID)
-	// 	if err != nil {
-	// 		logger.LogError("DeleteShortURL", err.Error())
-	// 	}
-	// }()
 	const batchSize = 10
 
 	urlChan := make(chan string, len(shortURLs))
