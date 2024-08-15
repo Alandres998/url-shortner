@@ -23,16 +23,11 @@ func DeleteShortURL(userID string, shortURLs []string) {
 	urlChan := make(chan string, len(shortURLs))
 	var wg sync.WaitGroup
 
-	for _, shortURL := range shortURLs {
-		wg.Add(1)
-		go func(url string) {
-			defer wg.Done()
-			urlChan <- url
-		}(shortURL)
-	}
-
+	// Send URLs to the channel
 	go func() {
-		wg.Wait()
+		for _, shortURL := range shortURLs {
+			urlChan <- shortURL
+		}
 		close(urlChan)
 	}()
 
@@ -41,19 +36,29 @@ func DeleteShortURL(userID string, shortURLs []string) {
 		for shortURL := range urlChan {
 			buffer = append(buffer, shortURL)
 			if len(buffer) >= batchSize {
-				err := storage.Store.DeleteUserURL(context.Background(), buffer, userID)
-				if err != nil {
-					logger.LogError("Delete Short URL", err.Error())
-				}
+				wg.Add(1)
+				go func(urls []string) {
+					defer wg.Done()
+					err := storage.Store.DeleteUserURL(context.Background(), urls, userID)
+					if err != nil {
+						logger.LogError("Delete Short URL", err.Error())
+					}
+				}(buffer)
 				buffer = buffer[:0]
 			}
 		}
 
 		if len(buffer) > 0 {
-			err := storage.Store.DeleteUserURL(context.Background(), buffer, userID)
-			if err != nil {
-				logger.LogError("Delete Short URL", err.Error())
-			}
+			wg.Add(1)
+			go func(urls []string) {
+				defer wg.Done()
+				err := storage.Store.DeleteUserURL(context.Background(), urls, userID)
+				if err != nil {
+					logger.LogError("Delete Short URL", err.Error())
+				}
+			}(buffer)
 		}
 	}()
+
+	wg.Wait()
 }
