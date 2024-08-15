@@ -37,7 +37,7 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 		original_url TEXT NOT NULL UNIQUE,
 		user_id TEXT,
 		date_created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-		is_deleted boolean
+		is_deleted boolean DEFAULT FALSE
 	);`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

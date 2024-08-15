@@ -31,7 +31,7 @@ func InitRouter() *gin.Engine {
 		apiRouteGroup.POST("/shorten", v1.WebInterfaceShortenJSON)
 		apiRouteGroup.POST("/shorten/batch", v1.WebInterfaceShortenJSONBatch)
 		apiRouteGroup.GET("/user/urls", v1.WebInterfaceGetAllShortURLByCookie)
-		apiRouteGroup.DELETE("/user/urls", v1.WebInterfaceDeleteShortUrl)
+		apiRouteGroup.DELETE("/user/urls", v1.WebInterfaceDeleteShortURL)
 	}
 	return r
 }

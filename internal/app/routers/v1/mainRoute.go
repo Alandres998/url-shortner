@@ -96,7 +96,7 @@ func WebInterfaceGetAllShortURLByCookie(c *gin.Context) {
 	c.JSON(statusCode, responseJSON)
 }
 
-func WebInterfaceDeleteShortUrl(c *gin.Context) {
+func WebInterfaceDeleteShortURL(c *gin.Context) {
 	var statusCode int
 	err := webservices.DeleteShortURL(c)
 	if err != nil {
