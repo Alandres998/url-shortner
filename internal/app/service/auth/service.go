@@ -119,6 +119,7 @@ func SetCookieUseInRequest(c *gin.Context) {
 			return
 		}
 		SetUserCookie(c, token)
+		logger.LoginInfo("Установлен новый токен", token)
 		return
 	}
 
@@ -130,8 +131,7 @@ func SetCookieUseInRequest(c *gin.Context) {
 				logger.LoginInfo("Не смог сгенирорвать токен", err.Error())
 				return
 			}
-			SetUserCookie(c, token)
-		} else {
+			logger.LoginInfo("Установлен токен (не прошел валидацию)", token)
 			SetUserCookie(c, token)
 		}
 	}

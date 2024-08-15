@@ -9,9 +9,8 @@ import (
 
 // Обработчик для возврата полной строки
 func Fuller(c *gin.Context) (string, error) {
-	ctx := context.Background()
 	id := c.Param("id")
-	urlOriginal, err := storage.Store.Get(ctx, id)
+	urlOriginal, err := storage.Store.Get(context.Background(), id)
 	if err != nil {
 		return "", err
 	}

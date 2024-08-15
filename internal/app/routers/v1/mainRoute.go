@@ -6,6 +6,9 @@ import (
 	"net/http"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
+	"github.com/Alandres998/url-shortner/internal/app/service/auth"
+	"github.com/Alandres998/url-shortner/internal/app/service/logger"
+	"github.com/Alandres998/url-shortner/internal/app/service/shortener"
 	webservices "github.com/Alandres998/url-shortner/internal/app/webServices"
 	"github.com/gin-gonic/gin"
 )
@@ -97,12 +100,22 @@ func WebInterfaceGetAllShortURLByCookie(c *gin.Context) {
 }
 
 func WebInterfaceDeleteShortURL(c *gin.Context) {
-	var statusCode int
-	err := webservices.DeleteShortURL(c)
-	if err != nil {
-		statusCode = http.StatusBadRequest
-	} else {
-		statusCode = http.StatusAccepted
+	var shortURLs []string
+	if err := c.BindJSON(&shortURLs); err != nil {
+		logger.LogError("Shorter Delete", err.Error())
+		c.String(http.StatusBadRequest, "")
+		return
 	}
-	c.String(statusCode, "")
+
+	userID, err := auth.GetUserIDByCookie(c)
+	if err != nil {
+		logger.LogError("Shorter Delete", err.Error())
+		c.String(http.StatusBadRequest, "")
+		return
+	}
+
+	go func() {
+		shortener.DeleteShortURL(userID, shortURLs)
+	}()
+	c.String(http.StatusAccepted, "")
 }
