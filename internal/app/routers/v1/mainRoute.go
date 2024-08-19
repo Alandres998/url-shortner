@@ -33,12 +33,10 @@ func WebInterfaceFull(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, storage.ErrURLDeleted) {
 			webservices.GetErrorWithCode(c, err.Error(), http.StatusGone)
-			return
 		} else {
 			webservices.GetErrorWithCode(c, err.Error(), http.StatusBadRequest)
-			return
 		}
-
+		return
 	}
 	c.Redirect(http.StatusTemporaryRedirect, responseHeaderLocation)
 }

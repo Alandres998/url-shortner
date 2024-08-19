@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
@@ -132,9 +131,7 @@ func (s *DBStorage) DeleteUserURL(ctx context.Context, shortURLs []string, userI
 	SET is_deleted = TRUE
 	WHERE short_url = ANY($1) AND user_id = $2;`
 
-	test, err := s.db.ExecContext(ctx, query, pq.Array(shortURLs), userID)
-	test2, _ := test.RowsAffected()
-	fmt.Print(test2)
+	_, err := s.db.ExecContext(ctx, query, pq.Array(shortURLs), userID)
 	if err != nil {
 		return err
 	}

@@ -17,8 +17,7 @@ const CookieName = "user_id"
 const secretKey = "kFHrlqA0"
 
 func GenerateUserID() string {
-	uid, _ := uuid.NewV4()
-	return uid.String()
+	return uuid.Must(uuid.NewV4()).String()
 }
 
 func GenerateJWT(userID string) (string, error) {
