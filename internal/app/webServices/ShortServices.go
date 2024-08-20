@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
+	"github.com/Alandres998/url-shortner/internal/app/service/auth"
 	"github.com/Alandres998/url-shortner/internal/app/service/shortener"
 	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,20 @@ func Shorter(c *gin.Context) (string, error) {
 	ctx := context.Background()
 	req := c.Request
 
+	logger, errLog := zap.NewProduction()
+	if errLog != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
+
+	defer logger.Sync()
+
+	userID, err := auth.GetUserID(c)
+	if err != nil {
+		logger.Info("Shorter Save",
+			zap.String("Внимание", err.Error()),
+		)
+	}
+
 	body, err := io.ReadAll(req.Body)
 	if err != nil || len(body) == 0 {
 		return "", errors.New(Error400DefaultText)
@@ -56,14 +71,7 @@ func Shorter(c *gin.Context) (string, error) {
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	originalURL := string(body)
 
-	logger, errLog := zap.NewProduction()
-	if errLog != nil {
-		log.Fatalf("Не смог иницировать логгер")
-	}
-
-	defer logger.Sync()
-
-	err = storage.Store.Set(ctx, codeURL, originalURL)
+	err = storage.Store.Set(ctx, userID, codeURL, originalURL)
 	if err != nil {
 		if errors.Is(err, storage.ErrURLExists) {
 			URLStore, err := storage.Store.GetbyOriginURL(ctx, originalURL)
@@ -87,9 +95,23 @@ func Shorter(c *gin.Context) (string, error) {
 func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	ctx := context.Background()
 	req := new(ShortenRequest)
+	logger, errLog := zap.NewProduction()
+	if errLog != nil {
+		log.Fatalf("Не смог иницировать логгер")
+	}
+
+	defer logger.Sync()
+
 	body, _ := io.ReadAll(c.Request.Body)
 
-	err := json.Unmarshal(body, req)
+	userID, err := auth.GetUserID(c)
+	if err != nil {
+		logger.Info("ShorterJson Save",
+			zap.String("Внимание", err.Error()),
+		)
+	}
+
+	err = json.Unmarshal(body, req)
 	if err != nil {
 		return ShortenResponse{}, errors.New(Error400DefaultText)
 	}
@@ -97,14 +119,7 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	codeURL := shortener.GenerateShortURL()
 	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
 	res := ShortenResponse{Result: shortedCode}
-	err = storage.Store.Set(ctx, codeURL, req.URL)
-
-	logger, errLog := zap.NewProduction()
-	if errLog != nil {
-		log.Fatalf("Не смог иницировать логгер")
-	}
-
-	defer logger.Sync()
+	err = storage.Store.Set(ctx, userID, codeURL, req.URL)
 
 	if err != nil {
 		if errors.Is(err, storage.ErrURLExists) {
@@ -130,12 +145,18 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	ctx := context.Background()
 	var batchRequests []BatchRequest
-
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatalf("не смог иницировать логгер")
 	}
 	defer logger.Sync()
+
+	userID, err := auth.GetUserID(c)
+	if err != nil {
+		logger.Info("ShorterJsonBatch Save",
+			zap.String("Внимание", err.Error()),
+		)
+	}
 
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -152,7 +173,7 @@ func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	for _, req := range batchRequests {
 		codeURL := shortener.GenerateShortURL()
 		shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
-		err := storage.Store.Set(ctx, codeURL, req.OriginalURL)
+		err := storage.Store.Set(ctx, userID, codeURL, req.OriginalURL)
 		if err != nil {
 			logger.Error("запись в стор в баче",
 				zap.String("ошибка", err.Error()),

@@ -13,6 +13,7 @@ func TestFileStorage(t *testing.T) {
 	// Устанавливаем путь и режим для файлового хранилища
 	filePath := "/tmp/test-short-url-db.json"
 	mode := os.O_RDWR | os.O_CREATE
+	userID := "122"
 
 	config.Options.FileStorage.Mode = mode
 	config.Options.FileStorage.Path = filePath
@@ -27,7 +28,7 @@ func TestFileStorage(t *testing.T) {
 
 	shortURL := "testShort"
 	originalURL := "http://valhalla.com"
-	err = fs.Set(ctx, shortURL, originalURL)
+	err = fs.Set(ctx, userID, shortURL, originalURL)
 	assert.NoError(t, err)
 
 	retrievedOriginalURL, err := fs.Get(ctx, shortURL)
@@ -43,7 +44,6 @@ func TestFileStorage(t *testing.T) {
 	assert.Equal(t, shortURL, urlData.ShortURL)
 	assert.Equal(t, originalURL, urlData.OriginalURL)
 
-	// Тест 6: Проверяем Ping
 	err = fs.Ping(ctx)
 	assert.NoError(t, err)
 }

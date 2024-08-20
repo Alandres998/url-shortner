@@ -34,7 +34,9 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 		id SERIAL PRIMARY KEY,
 		short_url TEXT NOT NULL,
 		original_url TEXT NOT NULL UNIQUE,
-		date_created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+		user_id TEXT,
+		date_created TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		is_deleted boolean DEFAULT FALSE
 	);`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -51,12 +53,12 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 	return &DBStorage{db: db}, nil
 }
 
-func (s *DBStorage) Set(ctx context.Context, shortURL, originalURL string) error {
+func (s *DBStorage) Set(ctx context.Context, userID, shortURL, originalURL string) error {
 	query := `
-	INSERT INTO short_url (short_url, original_url)
-	VALUES ($1, $2);`
+	INSERT INTO short_url (short_url, original_url, user_id)
+	VALUES ($1, $2, $3);`
 
-	_, err := s.db.ExecContext(ctx, query, shortURL, originalURL)
+	_, err := s.db.ExecContext(ctx, query, shortURL, originalURL, userID)
 	if err != nil && isUniqueViolation(err) {
 		return storage.ErrURLExists
 	}
@@ -65,21 +67,26 @@ func (s *DBStorage) Set(ctx context.Context, shortURL, originalURL string) error
 
 func (s *DBStorage) Get(ctx context.Context, shortURL string) (string, error) {
 	query := `
-	SELECT original_url
+	SELECT id, short_url, original_url, user_id, date_created, is_deleted
 	FROM short_url
 	WHERE short_url = $1;`
 
-	var originalURL string
-	err := s.db.GetContext(ctx, &originalURL, query, shortURL)
+	var urlData storage.URLData
+	err := s.db.GetContext(ctx, &urlData, query, shortURL)
 	if err != nil {
 		return "", err
 	}
-	return originalURL, nil
+
+	if urlData.Deleted {
+		return urlData.OriginalURL, storage.ErrURLDeleted
+	}
+
+	return urlData.OriginalURL, nil
 }
 
 func (s *DBStorage) GetbyOriginURL(ctx context.Context, originalURL string) (storage.URLData, error) {
 	query := `
-	SELECT id, short_url, original_url, date_created
+	SELECT id, short_url, original_url, user_id, date_created, is_deleted
 	FROM short_url
 	WHERE original_url = $1;`
 
@@ -102,4 +109,32 @@ func isUniqueViolation(err error) bool {
 
 func (s *DBStorage) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
+}
+
+func (s *DBStorage) GetUserURLs(ctx context.Context, userID string) ([]storage.URLData, error) {
+	query := `
+	SELECT id, short_url, original_url, user_id, date_created
+	FROM short_url
+	WHERE user_id = $1;`
+
+	var urls []storage.URLData
+	err := s.db.SelectContext(ctx, &urls, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	return urls, nil
+}
+
+func (s *DBStorage) DeleteUserURL(ctx context.Context, shortURLs []string, userID string) error {
+	query := `
+	UPDATE short_url
+	SET is_deleted = TRUE
+	WHERE short_url = ANY($1) AND user_id = $2;`
+
+	_, err := s.db.ExecContext(ctx, query, pq.Array(shortURLs), userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

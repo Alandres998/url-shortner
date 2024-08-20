@@ -36,6 +36,7 @@ func GzipMiddleware() gin.HandlerFunc {
 				c.Writer.Header().Del("Content-Length")
 				gz := gzip.NewWriter(c.Writer)
 				defer gz.Close()
+
 				_, err := gz.Write(buffer.Bytes())
 				if err != nil {
 					c.AbortWithError(http.StatusBadRequest, errors.New("не смог записать в ответ"))
@@ -46,6 +47,7 @@ func GzipMiddleware() gin.HandlerFunc {
 		}
 
 		if !strings.Contains(c.GetHeader("Accept-Encoding"), "identity") && !strings.Contains(c.GetHeader("Accept-Encoding"), "") {
+
 			_, err := c.Writer.Write(buffer.Bytes())
 			if err != nil {
 				c.String(http.StatusInternalServerError, "Не смог записать в ответ")
