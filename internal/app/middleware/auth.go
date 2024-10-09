@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Mидлварка на установка куки
+// AuthMiddleware Mидлварка на установка куки
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth.SetCookieUseInRequest(c)

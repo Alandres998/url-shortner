@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// NewStorage фабрика создает стор в зависимости от конфига
 func NewStorage() {
 	logger, err := zap.NewProduction()
 	if err != nil {

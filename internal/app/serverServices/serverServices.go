@@ -3,6 +3,7 @@ package serverservices
 import (
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storagefactory"
 	"github.com/Alandres998/url-shortner/internal/app/routers"
@@ -10,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// RunServer запускает сервер
 func RunServer() {
 	config.InitConfig()
 	storagefactory.NewStorage()

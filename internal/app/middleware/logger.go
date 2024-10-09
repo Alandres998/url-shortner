@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Logger Логирует параметры запроса
 func Logger() gin.HandlerFunc {
 	logger, err := zap.NewProduction()
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Обработчик для возврата полной строки
+// Fuller Веб-Сервис для возврата полной строки
 func Fuller(c *gin.Context) (string, error) {
 	id := c.Param("id")
 	urlOriginal, err := storage.Store.Get(context.Background(), id)

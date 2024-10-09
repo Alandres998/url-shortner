@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GzipMiddleware Сжимает ответ, если это поддерживает клиент
 func GzipMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if strings.Contains(c.GetHeader("Content-Encoding"), "gzip") {
@@ -56,7 +57,7 @@ func GzipMiddleware() gin.HandlerFunc {
 	}
 }
 
-// Проверяем можем ли зиповать такой тип ответа/запроса
+// shouldCompressContent Проверяем можем ли зиповать такой тип ответа/запроса
 func shouldCompressContent(contentType string) bool {
 	compressibleTypes := []string{
 		"application/json",
@@ -70,7 +71,7 @@ func shouldCompressContent(contentType string) bool {
 	return false
 }
 
-// Проверяем можем ли зиповать такой ответ с таким
+// avaibleCompressCode Проверяем можем ли зиповать такой ответ с таким
 func avaibleCompressCode(CodeResponse int) bool {
 	notAvaibleTypeCode := []int{
 		http.StatusTemporaryRedirect,
@@ -83,11 +84,13 @@ func avaibleCompressCode(CodeResponse int) bool {
 	return true
 }
 
+// responseWriter структура для расширения  ответа gin
 type responseWriter struct {
 	gin.ResponseWriter
 	buffer *bytes.Buffer
 }
 
+// Write записать данные в ответ
 func (w *responseWriter) Write(data []byte) (int, error) {
 	w.buffer.Write(data)
 	if w.Header().Get("Content-Encoding") == "gzip" {
