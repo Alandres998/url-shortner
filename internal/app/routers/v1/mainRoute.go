@@ -78,7 +78,8 @@ func WebInterfaceGetAllShortURLByCookie(c *gin.Context) {
 	var statusCode int
 	var responseJSON []webservices.ShortUserResponse
 
-	userURLs, err := webservices.GetAllUserShorterURL(c)
+	authenticator := &auth.AuthService{}
+	userURLs, err := webservices.GetAllUserShorterURL(c, authenticator)
 	if err != nil {
 		if errors.Is(err, webservices.Error401DefaultText) {
 			statusCode = http.StatusUnauthorized
