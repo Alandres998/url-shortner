@@ -44,11 +44,12 @@ func TestSetUserCookie(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	c.Request = req
 
-	defer req.Body.Close()
-
 	auth.SetUserCookie(c, "user123")
 
-	cookies := w.Result().Cookies()
+	result := w.Result()
+	defer result.Body.Close()
+
+	cookies := result.Cookies()
 
 	require.Len(t, cookies, 1)
 	assert.Equal(t, auth.CookieName, cookies[0].Name)
