@@ -19,6 +19,7 @@ const CookieName = "user_id"
 // secretKey ксекретный ключик
 const secretKey = "kFHrlqA0"
 
+// Authenticator интерфейс для аунтификации (используется в тестах)
 type Authenticator interface {
 	GetUserIDByCookie(c *gin.Context) (string, error)
 }
