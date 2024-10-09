@@ -20,16 +20,20 @@ type Authenticator interface {
 	GetUserIDByCookie(c *gin.Context) (string, error)
 }
 
+// AuthService предоставляет методы для аутентификации пользователей.
 type AuthService struct{}
 
+// GetUserIDByCookie получает id пользователя из cookie.
 func (a *AuthService) GetUserIDByCookie(c *gin.Context) (string, error) {
 	return GetUserIDByCookie(c)
 }
 
+// GenerateUserID создает новый уникальный id пользователя.
 func GenerateUserID() string {
 	return uuid.Must(uuid.NewV4()).String()
 }
 
+// GenerateJWT создает новый JWT на основе id пользователя.
 func GenerateJWT(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -39,6 +43,7 @@ func GenerateJWT(userID string) (string, error) {
 	return token.SignedString([]byte(secretKey))
 }
 
+// ValidateJWT проверяет действительность JWT и возвращает токен, если он валиден.
 func ValidateJWT(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -59,6 +64,7 @@ func ValidateJWT(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
+// SetUserCookie устанавливает cookie с JWT для указанного id пользователя.
 func SetUserCookie(c *gin.Context, userID string) {
 	jwt, err := GenerateJWT(GenerateUserID())
 	if err != nil {
@@ -76,6 +82,7 @@ func SetUserCookie(c *gin.Context, userID string) {
 	c.Set(CookieName, jwt)
 }
 
+// GetUserID получает id пользователя из cookie или контекста Gin.
 func GetUserID(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie(CookieName)
 	if err != nil {
@@ -91,6 +98,7 @@ func GetUserID(c *gin.Context) (string, error) {
 	return cookie, nil
 }
 
+// GetUserIDByCookie получает id пользователя из cookie.
 func GetUserIDByCookie(c *gin.Context) (string, error) {
 	cookie, err := c.Cookie(CookieName)
 	if err != nil {
@@ -99,6 +107,7 @@ func GetUserIDByCookie(c *gin.Context) (string, error) {
 	return cookie, nil
 }
 
+// LogHeader логирует все заголовки HTTP-запроса.
 func LogHeader(c *gin.Context, action string) {
 	// Логируем все заголовки
 	logger, errLog := zap.NewProduction()
@@ -117,6 +126,7 @@ func LogHeader(c *gin.Context, action string) {
 	}
 }
 
+// SetCookieUseInRequest устанавливает cookie для текущего запроса, если она отсутствует или недействительна.
 func SetCookieUseInRequest(c *gin.Context) {
 	token, err := c.Cookie(CookieName)
 

@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// DeleteShortURL Веб-Сервис по удалению ссылки
 func DeleteShortURL(c *gin.Context) {
 	var shortURLs []string
 

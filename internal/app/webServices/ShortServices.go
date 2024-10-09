@@ -44,6 +44,7 @@ func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 	fmt.Fprintln(c.Writer, errorText)
 }
 
+// Shorter Веб-Сервис сокращения ссылки присланной text/plain
 func Shorter(c *gin.Context) (string, error) {
 	ctx := c.Request.Context()
 	req := c.Request
@@ -93,6 +94,7 @@ func Shorter(c *gin.Context) (string, error) {
 	return shortedCode, err
 }
 
+// ShorterJSON Веб-Сервис сокращения ссылок присланных application/json
 func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	ctx := context.Background()
 	req := new(ShortenRequest)
@@ -143,6 +145,7 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	return res, err
 }
 
+// ShorterJSONBatch Веб-Сервис сокращения батча ссылок присланных application/json
 func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	ctx := context.Background()
 	var batchRequests []BatchRequest
