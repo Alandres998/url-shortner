@@ -19,9 +19,9 @@ type ShortUserResponse struct {
 var Error401DefaultText = errors.New("нет такого кука")
 var Error204DefaultText = errors.New("у пользователя нет ни одного сокращенного URL")
 
-func GetAllUserShorterURL(c *gin.Context) ([]ShortUserResponse, error) {
+func GetAllUserShorterURL(c *gin.Context, authenticator auth.Authenticator) ([]ShortUserResponse, error) {
 	ctx := context.Background()
-	userID, err := auth.GetUserIDByCookie(c)
+	userID, err := authenticator.GetUserIDByCookie(c)
 	if err != nil {
 		return []ShortUserResponse{}, Error401DefaultText
 	}
