@@ -45,24 +45,22 @@ func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 }
 
 func Shorter(c *gin.Context) (string, error) {
-	ctx := context.Background()
+	ctx := c.Request.Context()
 	req := c.Request
-
-	logger, errLog := zap.NewProduction()
-	if errLog != nil {
-		log.Fatalf("Не смог иницировать логгер")
-	}
-
-	defer logger.Sync()
 
 	userID, err := auth.GetUserID(c)
 	if err != nil {
-		logger.Info("Shorter Save",
-			zap.String("Внимание", err.Error()),
-		)
+		logger, errLog := zap.NewProduction()
+		if errLog != nil {
+			log.Fatalf("Не смог иницировать логгер")
+		}
+
+		defer logger.Sync()
+		logger.Info("Shorter Save", zap.String("Внимание", err.Error()))
 	}
 
-	body, err := io.ReadAll(req.Body)
+	const maxBodySize = 1024 // 1MB
+	body, err := io.ReadAll(io.LimitReader(req.Body, maxBodySize))
 	if err != nil || len(body) == 0 {
 		return "", errors.New(Error400DefaultText)
 	}
@@ -73,19 +71,22 @@ func Shorter(c *gin.Context) (string, error) {
 
 	err = storage.Store.Set(ctx, userID, codeURL, originalURL)
 	if err != nil {
+		logger, errLog := zap.NewProduction()
+		if errLog != nil {
+			log.Fatalf("Не смог иницировать логгер")
+		}
+
+		defer logger.Sync()
 		if errors.Is(err, storage.ErrURLExists) {
 			URLStore, err := storage.Store.GetbyOriginURL(ctx, originalURL)
-			URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
-			shortedCode = URLStore.ShortURL
-			if err != nil {
-				logger.Error("Shorter Save Dublicate",
-					zap.String("Ошибка", string(err.Error())),
-				)
+			if err == nil {
+				URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
+				shortedCode = URLStore.ShortURL
+			} else {
+				logger.Error("Shorter Save Duplicate", zap.Error(err))
 			}
 		} else {
-			logger.Error("Shorter Save",
-				zap.String("Ошибка", string(err.Error())),
-			)
+			logger.Error("Shorter Save", zap.Error(err))
 		}
 	}
 
