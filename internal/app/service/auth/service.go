@@ -16,6 +16,16 @@ import (
 const CookieName = "user_id"
 const secretKey = "kFHrlqA0"
 
+type Authenticator interface {
+	GetUserIDByCookie(c *gin.Context) (string, error)
+}
+
+type AuthService struct{}
+
+func (a *AuthService) GetUserIDByCookie(c *gin.Context) (string, error) {
+	return GetUserIDByCookie(c)
+}
+
 func GenerateUserID() string {
 	return uuid.Must(uuid.NewV4()).String()
 }

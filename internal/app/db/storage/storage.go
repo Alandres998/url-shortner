@@ -28,3 +28,35 @@ var ErrURLExists = errors.New("такой адрес уже есть")
 var ErrURLDeleted = errors.New("URL был удален")
 
 var Store Storage
+
+// Заглушки для бенчмарков
+type MockStorage struct {
+	DeleteUserURLFunc func(ctx context.Context, urls []string, userID string) error
+}
+
+func (m *MockStorage) Get(ctx context.Context, key string) (string, error) {
+	panic("тест")
+}
+
+func (m *MockStorage) GetUserURLs(ctx context.Context, userID string) ([]URLData, error) {
+	panic("тест")
+}
+
+func (m *MockStorage) GetbyOriginURL(ctx context.Context, key string) (URLData, error) {
+	panic("тест")
+}
+
+func (m *MockStorage) Ping(ctx context.Context) error {
+	panic("тест")
+}
+
+func (m *MockStorage) Set(ctx context.Context, userID string, key string, value string) error {
+	panic("тест")
+}
+
+func (m *MockStorage) DeleteUserURL(ctx context.Context, urls []string, userID string) error {
+	if m.DeleteUserURLFunc != nil {
+		return m.DeleteUserURLFunc(ctx, urls, userID)
+	}
+	return nil
+}
