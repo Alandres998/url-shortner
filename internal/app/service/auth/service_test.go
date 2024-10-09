@@ -37,13 +37,15 @@ func TestValidateJWT(t *testing.T) {
 	require.True(t, parsedToken.Valid)
 }
 
-// Тестируем SetUserCookie
 func TestSetUserCookie(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 
-	c.Request = httptest.NewRequest("GET", "/", nil)
-	c.Request.Body.Close()
+	req := httptest.NewRequest("GET", "/", nil)
+	c.Request = req
+
+	defer req.Body.Close()
+
 	auth.SetUserCookie(c, "user123")
 
 	cookies := w.Result().Cookies()
