@@ -13,7 +13,10 @@ import (
 	"go.uber.org/zap"
 )
 
+// CookieName ключ для куки с ид пользователя
 const CookieName = "user_id"
+
+// secretKey ксекретный ключик
 const secretKey = "kFHrlqA0"
 
 type Authenticator interface {

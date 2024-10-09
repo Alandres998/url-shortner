@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// RunServer запускает сервер
 func RunServer() {
 	config.InitConfig()
 	storagefactory.NewStorage()
