@@ -43,10 +43,11 @@ func TestSetUserCookie(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 
 	c.Request = httptest.NewRequest("GET", "/", nil)
-
+	c.Request.Body.Close()
 	auth.SetUserCookie(c, "user123")
 
 	cookies := w.Result().Cookies()
+
 	require.Len(t, cookies, 1)
 	assert.Equal(t, auth.CookieName, cookies[0].Name)
 }
@@ -66,10 +67,12 @@ func TestGetUserID_Success(t *testing.T) {
 	})
 
 	c.Request = httptest.NewRequest("GET", "/", nil)
+	c.Request.Body.Close()
 	c.Request.AddCookie(&http.Cookie{
 		Name:  auth.CookieName,
 		Value: token,
 	})
+
 	userID, err := auth.GetUserID(c)
 	require.NoError(t, err)
 	assert.NotEmpty(t, userID)
@@ -126,6 +129,7 @@ func BenchmarkGetUserID(b *testing.B) {
 	auth.SetUserCookie(c, userID)
 
 	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	c.Request.Body.Close()
 	c.Request.AddCookie(&http.Cookie{
 		Name:  auth.CookieName,
 		Value: userID,
@@ -148,6 +152,7 @@ func BenchmarkGetUserIDByCookie(b *testing.B) {
 	auth.SetUserCookie(c, userID)
 
 	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	c.Request.Body.Close()
 	c.Request.AddCookie(&http.Cookie{
 		Name:  auth.CookieName,
 		Value: userID,
@@ -173,7 +178,7 @@ func BenchmarkLogHeader(b *testing.B) {
 			"Content-Type":  []string{"application/json"},
 		},
 	}
-
+	c.Request.Body.Close()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		auth.LogHeader(c, "TestAction")
@@ -190,7 +195,8 @@ func BenchmarkSetCookieUseInRequest(b *testing.B) {
 		b.Fatal(err)
 	}
 
-	c.Request = httptest.NewRequest(http.MethodGet, "/", nil) // Создаем новый запрос
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	c.Request.Body.Close()
 	c.Request.AddCookie(&http.Cookie{
 		Name:  auth.CookieName,
 		Value: token,
