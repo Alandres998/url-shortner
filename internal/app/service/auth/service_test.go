@@ -181,7 +181,7 @@ func BenchmarkLogHeader(b *testing.B) {
 			"Content-Type":  []string{"application/json"},
 		},
 	}
-	c.Request.Body.Close()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		auth.LogHeader(c, "TestAction")
