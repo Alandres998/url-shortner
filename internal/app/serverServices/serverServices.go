@@ -3,6 +3,7 @@ package serverservices
 import (
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storagefactory"
 	"github.com/Alandres998/url-shortner/internal/app/routers"

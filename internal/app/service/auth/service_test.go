@@ -74,3 +74,130 @@ func TestGetUserID_Success(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, userID)
 }
+
+// //Бенчмарки
+func BenchmarkGenerateJWT(b *testing.B) {
+	userID := auth.GenerateUserID()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := auth.GenerateJWT(userID)
+		if err != nil {
+			b.Error(err) // Обработка ошибки
+		}
+	}
+}
+
+func BenchmarkValidateJWT(b *testing.B) {
+	userID := auth.GenerateUserID()
+	token, err := auth.GenerateJWT(userID)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := auth.ValidateJWT(token)
+		if err != nil {
+			b.Error(err) // Обработка ошибки
+		}
+	}
+}
+
+func BenchmarkSetUserCookie(b *testing.B) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+
+	userID := auth.GenerateUserID()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		auth.SetUserCookie(c, userID)
+	}
+}
+
+func BenchmarkGetUserID(b *testing.B) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+
+	userID := auth.GenerateUserID()
+	auth.SetUserCookie(c, userID)
+
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	c.Request.AddCookie(&http.Cookie{
+		Name:  auth.CookieName,
+		Value: userID,
+	})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := auth.GetUserID(c)
+		if err != nil {
+			b.Error(err) // Обработка ошибки
+		}
+	}
+}
+func BenchmarkGetUserIDByCookie(b *testing.B) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+
+	userID := auth.GenerateUserID()
+	auth.SetUserCookie(c, userID)
+
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+	c.Request.AddCookie(&http.Cookie{
+		Name:  auth.CookieName,
+		Value: userID,
+	})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := auth.GetUserIDByCookie(c)
+		if err != nil {
+			b.Error(err)
+		}
+	}
+}
+
+func BenchmarkLogHeader(b *testing.B) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+
+	c.Request = &http.Request{
+		Header: http.Header{
+			"Authorization": []string{"Bearer some_token"},
+			"Content-Type":  []string{"application/json"},
+		},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		auth.LogHeader(c, "TestAction")
+	}
+}
+
+func BenchmarkSetCookieUseInRequest(b *testing.B) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+
+	token, err := auth.GenerateJWT(auth.GenerateUserID())
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	c.Request = httptest.NewRequest(http.MethodGet, "/", nil) // Создаем новый запрос
+	c.Request.AddCookie(&http.Cookie{
+		Name:  auth.CookieName,
+		Value: token,
+	})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		auth.SetCookieUseInRequest(c)
+	}
+}
