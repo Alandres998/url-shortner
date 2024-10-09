@@ -37,6 +37,15 @@ func InitConfig() {
 	determineStorageType()
 }
 
+func InitConfigExample() {
+	if os.Getenv("RUN_MODE") == "test" {
+		return
+	}
+	loadEnv()
+	loadConfigFile()
+	Options.StorageType = StorageTypeMemory
+}
+
 func GetAdressServer(Port string) string {
 	text := fmt.Sprintf("http://localhost%s", Port)
 	return text
