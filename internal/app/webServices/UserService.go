@@ -11,12 +11,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ShortUserResponse структура ответа
 type ShortUserResponse struct {
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
 
+// Error401DefaultText ошибка на куки
 var Error401DefaultText = errors.New("нет такого кука")
+
+// Error204DefaultText ошибка когда нет удаляемой сокращения
 var Error204DefaultText = errors.New("у пользователя нет ни одного сокращенного URL")
 
 // GetAllUserShorterURL Веб-Сервис получения списка всех сокращенных ссылок.

@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// WebInterfaceShort Веб интерфейс сокращения ссылок
 func WebInterfaceShort(c *gin.Context) {
 	responseText, err := webservices.Shorter(c)
 	statusCode := http.StatusCreated
@@ -28,6 +29,7 @@ func WebInterfaceShort(c *gin.Context) {
 	c.String(statusCode, string(responseText))
 }
 
+// WebInterfaceShort Веб интерфейс вернуть полную ссылку
 func WebInterfaceFull(c *gin.Context) {
 	responseHeaderLocation, err := webservices.Fuller(c)
 	if err != nil {
@@ -41,6 +43,7 @@ func WebInterfaceFull(c *gin.Context) {
 	c.Redirect(http.StatusTemporaryRedirect, responseHeaderLocation)
 }
 
+// WebInterfaceShortenJSON Веб интерфейс сокращения ссылок для json
 func WebInterfaceShortenJSON(c *gin.Context) {
 	responseJSON, err := webservices.ShorterJSON(c)
 	statusCode := http.StatusCreated
@@ -55,6 +58,7 @@ func WebInterfaceShortenJSON(c *gin.Context) {
 	c.JSON(statusCode, responseJSON)
 }
 
+// WebInterfaceShortenJSONBatch Веб интерфейс сокращения ссылок для json батчами
 func WebInterfaceShortenJSONBatch(c *gin.Context) {
 	responseJSON, err := webservices.ShorterJSONBatch(c)
 	if err != nil {
@@ -64,6 +68,7 @@ func WebInterfaceShortenJSONBatch(c *gin.Context) {
 	c.JSON(http.StatusCreated, responseJSON)
 }
 
+// WebInterfacePing Веб интерфейс проверка доступности хранилища
 func WebInterfacePing(c *gin.Context) {
 	ctx := context.Background()
 	err := storage.Store.Ping(ctx)
@@ -74,6 +79,7 @@ func WebInterfacePing(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
+// WebInterfacePing Веб интерфейс получения всех сокращалок пользователя
 func WebInterfaceGetAllShortURLByCookie(c *gin.Context) {
 	var statusCode int
 	var responseJSON []webservices.ShortUserResponse
@@ -98,6 +104,7 @@ func WebInterfaceGetAllShortURLByCookie(c *gin.Context) {
 	c.JSON(statusCode, responseJSON)
 }
 
+// WebInterfacePing Веб интерфейс удаления ссылки
 func WebInterfaceDeleteShortURL(c *gin.Context) {
 	var shortURLs []string
 	if err := c.BindJSON(&shortURLs); err != nil {

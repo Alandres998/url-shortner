@@ -16,27 +16,32 @@ import (
 	"go.uber.org/zap"
 )
 
+// Error400DefaultText Текст обычной ошибки
 const Error400DefaultText = "Ошибка"
 
-// Определение типов для запросов и ответов
+// ShortenRequest Определение типов для запросов и ответов
 type ShortenRequest struct {
 	URL string `json:"url"`
 }
 
+// ShortenRequest структура ответа на сокращение
 type ShortenResponse struct {
 	Result string `json:"result"`
 }
 
+// BatchRequest структура параметров запроса на батч сокращения ссылок json
 type BatchRequest struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
+// BatchRequest структура параметров ответа на батч сокращения ссылок json
 type BatchResponse struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
 }
 
+// GetErrorWithCode вызов кастомноый ошибки с нужным кодом и текстом
 func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	c.Writer.Header().Set("X-Content-Type-Options", "nosniff")

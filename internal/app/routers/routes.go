@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// InitRouter инициализация маршрутизатора
 func InitRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(middlewares.Logger())
