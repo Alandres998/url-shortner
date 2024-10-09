@@ -3,6 +3,9 @@ package routers
 import (
 	"net/http"
 	"net/http/pprof"
+	"os"
+	ProcProf "runtime/pprof"
+	"time"
 
 	middlewares "github.com/Alandres998/url-shortner/internal/app/middleware"
 	v1 "github.com/Alandres998/url-shortner/internal/app/routers/v1"
@@ -48,6 +51,24 @@ func InitRouter() *gin.Engine {
 		debugRouteGroup.GET("/symbol", gin.WrapH(pprof.Handler("symbol")))
 		debugRouteGroup.GET("/trace", gin.WrapH(pprof.Handler("trace")))
 		debugRouteGroup.GET("/allocs", gin.WrapH(pprof.Handler("allocs")))
+
+		debugRouteGroup.GET("/save", func(c *gin.Context) {
+			currentTime := time.Now().Format("20060102150405")
+			nameFile := "prof_" + currentTime + ".pprof"
+			file, err := os.Create("profiles/" + nameFile)
+			if err != nil {
+				c.String(http.StatusInternalServerError, "Ошибка при создании файла профиля: %s", err)
+				return
+			}
+			defer file.Close()
+
+			if err := ProcProf.WriteHeapProfile(file); err != nil {
+				c.String(http.StatusInternalServerError, "Ошибка при записи профиля: %s", err)
+				return
+			}
+
+			c.String(http.StatusOK, "Профиль памяти сохранен в profiles/base.pprof")
+		})
 	}
 
 	return r
