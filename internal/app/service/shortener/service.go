@@ -9,6 +9,8 @@ import (
 	"github.com/Alandres998/url-shortner/internal/app/service/logger"
 )
 
+// GenerateShortURL генерирует случайный короткий URL из заданного набора символов.
+// Возвращает строку длиной 8 символов, состоящую из букв и цифр.
 func GenerateShortURL() string {
 	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	shortURL := make([]byte, 8)
@@ -18,6 +20,8 @@ func GenerateShortURL() string {
 	return string(shortURL)
 }
 
+// DeleteShortURL удаляет указанные короткие URL для пользователя с заданным userID.
+// Принимает userID и срез коротких URL для удаления.
 func DeleteShortURL(userID string, shortURLs []string) {
 	const batchSize = 10
 

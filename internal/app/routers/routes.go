@@ -3,12 +3,15 @@ package routers
 import (
 	"net/http"
 
+	"github.com/gin-contrib/pprof"
+
 	middlewares "github.com/Alandres998/url-shortner/internal/app/middleware"
 	v1 "github.com/Alandres998/url-shortner/internal/app/routers/v1"
 	webservices "github.com/Alandres998/url-shortner/internal/app/webServices"
 	"github.com/gin-gonic/gin"
 )
 
+// InitRouter инициализация маршрутизатора
 func InitRouter() *gin.Engine {
 	r := gin.Default()
 	r.Use(middlewares.Logger())
@@ -33,5 +36,9 @@ func InitRouter() *gin.Engine {
 		apiRouteGroup.GET("/user/urls", v1.WebInterfaceGetAllShortURLByCookie)
 		apiRouteGroup.DELETE("/user/urls", v1.WebInterfaceDeleteShortURL)
 	}
+
+	//Регистрируем либу pprof
+	pprof.Register(r)
+
 	return r
 }

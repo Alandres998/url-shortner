@@ -16,27 +16,32 @@ import (
 	"go.uber.org/zap"
 )
 
+// Error400DefaultText Текст обычной ошибки
 const Error400DefaultText = "Ошибка"
 
-// Определение типов для запросов и ответов
+// ShortenRequest Определение типов для запросов и ответов
 type ShortenRequest struct {
 	URL string `json:"url"`
 }
 
+// ShortenRequest структура ответа на сокращение
 type ShortenResponse struct {
 	Result string `json:"result"`
 }
 
+// BatchRequest структура параметров запроса на батч сокращения ссылок json
 type BatchRequest struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
+// BatchRequest структура параметров ответа на батч сокращения ссылок json
 type BatchResponse struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
 }
 
+// GetErrorWithCode вызов кастомноый ошибки с нужным кодом и текстом
 func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
@@ -44,25 +49,24 @@ func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 	fmt.Fprintln(c.Writer, errorText)
 }
 
+// Shorter Веб-Сервис сокращения ссылки присланной text/plain
 func Shorter(c *gin.Context) (string, error) {
-	ctx := context.Background()
+	ctx := c.Request.Context()
 	req := c.Request
-
-	logger, errLog := zap.NewProduction()
-	if errLog != nil {
-		log.Fatalf("Не смог иницировать логгер")
-	}
-
-	defer logger.Sync()
 
 	userID, err := auth.GetUserID(c)
 	if err != nil {
-		logger.Info("Shorter Save",
-			zap.String("Внимание", err.Error()),
-		)
+		logger, errLog := zap.NewProduction()
+		if errLog != nil {
+			log.Fatalf("Не смог иницировать логгер")
+		}
+
+		defer logger.Sync()
+		logger.Info("Shorter Save", zap.String("Внимание", err.Error()))
 	}
 
-	body, err := io.ReadAll(req.Body)
+	const maxBodySize = 1024 // 1MB
+	body, err := io.ReadAll(io.LimitReader(req.Body, maxBodySize))
 	if err != nil || len(body) == 0 {
 		return "", errors.New(Error400DefaultText)
 	}
@@ -73,25 +77,29 @@ func Shorter(c *gin.Context) (string, error) {
 
 	err = storage.Store.Set(ctx, userID, codeURL, originalURL)
 	if err != nil {
+		logger, errLog := zap.NewProduction()
+		if errLog != nil {
+			log.Fatalf("Не смог иницировать логгер")
+		}
+
+		defer logger.Sync()
 		if errors.Is(err, storage.ErrURLExists) {
 			URLStore, err := storage.Store.GetbyOriginURL(ctx, originalURL)
-			URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
-			shortedCode = URLStore.ShortURL
-			if err != nil {
-				logger.Error("Shorter Save Dublicate",
-					zap.String("Ошибка", string(err.Error())),
-				)
+			if err == nil {
+				URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
+				shortedCode = URLStore.ShortURL
+			} else {
+				logger.Error("Shorter Save Duplicate", zap.Error(err))
 			}
 		} else {
-			logger.Error("Shorter Save",
-				zap.String("Ошибка", string(err.Error())),
-			)
+			logger.Error("Shorter Save", zap.Error(err))
 		}
 	}
 
 	return shortedCode, err
 }
 
+// ShorterJSON Веб-Сервис сокращения ссылок присланных application/json
 func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	ctx := context.Background()
 	req := new(ShortenRequest)
@@ -142,6 +150,7 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	return res, err
 }
 
+// ShorterJSONBatch Веб-Сервис сокращения батча ссылок присланных application/json
 func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	ctx := context.Background()
 	var batchRequests []BatchRequest
