@@ -4,7 +4,10 @@ go 1.22.4
 
 require github.com/stretchr/testify v1.9.0
 
-require github.com/stretchr/objx v0.5.2 // indirect
+require (
+	github.com/gin-contrib/pprof v1.5.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
+)
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
