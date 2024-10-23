@@ -100,12 +100,12 @@ func Shorter(c *gin.Context) (string, error) {
 		}()
 
 		if errors.Is(err, storage.ErrURLExists) {
-			URLStore, errDb := storage.Store.GetbyOriginURL(ctx, originalURL)
-			if errDb == nil {
+			URLStore, errDB := storage.Store.GetbyOriginURL(ctx, originalURL)
+			if errDB == nil {
 				URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
 				shortedCode = URLStore.ShortURL
 			} else {
-				logger.Error("Shorter Save Duplicate", zap.Error(err))
+				logger.Error("Shorter Save Duplicate", zap.Error(errDB))
 			}
 		} else {
 			logger.Error("Shorter Save", zap.Error(err))
