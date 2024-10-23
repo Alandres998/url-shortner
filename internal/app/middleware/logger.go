@@ -14,7 +14,14 @@ func Logger() gin.HandlerFunc {
 	if err != nil {
 		log.Fatalf("Не смог иницировать логгер")
 	}
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
 
 	return func(c *gin.Context) {
 		startTime := time.Now()

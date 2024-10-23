@@ -115,7 +115,15 @@ func GetUserIDByCookie(c *gin.Context) (string, error) {
 func LogHeader(c *gin.Context, action string) {
 	// Логируем все заголовки
 	logger, errLog := zap.NewProduction()
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
+
 	if errLog != nil {
 		log.Fatalf("Не смог иницировать логгер")
 	}

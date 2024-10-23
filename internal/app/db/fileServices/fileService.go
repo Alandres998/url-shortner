@@ -43,7 +43,15 @@ func (fs *FileStorage) initFileStorage() error {
 	if err != nil {
 		log.Fatalf("Не смог инициализировать логгер")
 	}
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
+
 	fs.lastIncrement = 0
 	urlSlice, err := fs.readOrCreateFile(fs.filePath)
 	if err != nil {
@@ -65,7 +73,12 @@ func (fs *FileStorage) readOrCreateFile(filePath string) ([]storage.URLData, err
 	if err != nil {
 		return nil, fmt.Errorf("не удалось открыть файл: %v", err)
 	}
-	defer file.Close()
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("Ошибка при закрытии чтения файла: %v", err)
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -98,7 +111,14 @@ func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
 	if err != nil {
 		log.Fatalf("Не смог инициализировать логгер")
 	}
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
 
 	file, err := os.OpenFile(config.Options.FileStorage.Path, os.O_APPEND|config.Options.FileStorage.Mode, 0644)
 	if err != nil {
@@ -107,7 +127,12 @@ func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
 		)
 		return
 	}
-	defer file.Close()
+
+	defer func() {
+		if errFile := file.Close(); errFile != nil {
+			log.Printf("Ошибка при закрытии чтения файла: %v", errFile)
+		}
+	}()
 
 	jsonData, err := json.Marshal(shortURL)
 	if err != nil {
@@ -217,7 +242,11 @@ func (fs *FileStorage) writeAllData() {
 		zap.L().Error("Ошибка при открытии файла", zap.Error(err))
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("Ошибка при закрытии чтения файла: %v", err)
+		}
+	}()
 
 	for _, urlData := range fs.urlData {
 		jsonData, err := json.Marshal(urlData)

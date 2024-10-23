@@ -10,7 +10,15 @@ import (
 // title - заголовок сообщения, info - сообщение
 func LoginInfo(title string, info string) {
 	logger, errLog := zap.NewProduction()
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
+
 	if errLog != nil {
 		log.Fatalf("Не смог инициализировать логгер")
 	}
@@ -24,7 +32,15 @@ func LoginInfo(title string, info string) {
 // title - заголовок сообщения об ошибке, info - сообщение
 func LogError(title string, info string) {
 	logger, errLog := zap.NewProduction()
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
+
 	if errLog != nil {
 		log.Fatalf("Не смог инициализировать логгер")
 	}
