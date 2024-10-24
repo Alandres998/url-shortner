@@ -11,9 +11,8 @@ import (
 	"honnef.co/go/tools/staticcheck"
 )
 
-// main инициализирует и запускает multichecker с кастомными анализаторами.
-func main() {
-	// Список анализаторов multichecker
+// initAnalyzers инициализация анализаторов
+func initAnalyzers() []*analysis.Analyzer {
 	var analyzers []*analysis.Analyzer
 
 	//Анализаторы из коробочки
@@ -28,8 +27,14 @@ func main() {
 	// Добавляем публичный анализатор errcheck
 	analyzers = append(analyzers, errcheck.Analyzer)
 
-	// Раздел добавления кастомных анализаторов
-	analyzers = append(analyzers, myanalyzers.MainExitAnalyzer)
+	// Кастомный анализатор
+	analyzers = append(analyzers, myanalyzers.ProhibitOsExitInMainAnalyzer)
 
+	return analyzers
+}
+
+// main запускает multichecker с инициализированными анализаторами.
+func main() {
+	analyzers := initAnalyzers()
 	multichecker.Main(analyzers...)
 }

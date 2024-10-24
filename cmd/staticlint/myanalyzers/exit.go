@@ -7,7 +7,7 @@ import (
 )
 
 // MainExitAnalyzer — анализатор, который запрещает использование os.Exit в функции main пакета main.
-var MainExitAnalyzer = &analysis.Analyzer{
+var ProhibitOsExitInMainAnalyzer = &analysis.Analyzer{
 	Name: "mainexit",
 	Doc:  "запрещает использование os.Exit в функции main пакета main",
 	Run:  run,
