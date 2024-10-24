@@ -46,7 +46,9 @@ func GetErrorWithCode(c *gin.Context, errorText string, codeError int) {
 	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
 	c.Writer.WriteHeader(codeError)
-	fmt.Fprintln(c.Writer, errorText)
+	if _, err := fmt.Fprintln(c.Writer, errorText); err != nil {
+		log.Printf("Ошибка при записи в хендлер ответа: %v", err)
+	}
 }
 
 // Shorter Веб-Сервис сокращения ссылки присланной text/plain
@@ -61,7 +63,14 @@ func Shorter(c *gin.Context) (string, error) {
 			log.Fatalf("Не смог иницировать логгер")
 		}
 
-		defer logger.Sync()
+		defer func() {
+			if errLoger := logger.Sync(); errLoger != nil {
+				logger.Error("Проблемы при закрытии логера",
+					zap.String("Не смог закрыть логгер", errLoger.Error()),
+				)
+			}
+		}()
+
 		logger.Info("Shorter Save", zap.String("Внимание", err.Error()))
 	}
 
@@ -82,14 +91,21 @@ func Shorter(c *gin.Context) (string, error) {
 			log.Fatalf("Не смог иницировать логгер")
 		}
 
-		defer logger.Sync()
+		defer func() {
+			if errLoger := logger.Sync(); errLoger != nil {
+				logger.Error("Проблемы при закрытии логера",
+					zap.String("Не смог закрыть логгер", errLoger.Error()),
+				)
+			}
+		}()
+
 		if errors.Is(err, storage.ErrURLExists) {
-			URLStore, err := storage.Store.GetbyOriginURL(ctx, originalURL)
-			if err == nil {
+			URLStore, errDB := storage.Store.GetbyOriginURL(ctx, originalURL)
+			if errDB == nil {
 				URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
 				shortedCode = URLStore.ShortURL
 			} else {
-				logger.Error("Shorter Save Duplicate", zap.Error(err))
+				logger.Error("Shorter Save Duplicate", zap.Error(errDB))
 			}
 		} else {
 			logger.Error("Shorter Save", zap.Error(err))
@@ -108,7 +124,13 @@ func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 		log.Fatalf("Не смог иницировать логгер")
 	}
 
-	defer logger.Sync()
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
 
 	body, _ := io.ReadAll(c.Request.Body)
 
@@ -158,7 +180,14 @@ func ShorterJSONBatch(c *gin.Context) ([]BatchResponse, error) {
 	if err != nil {
 		log.Fatalf("не смог иницировать логгер")
 	}
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
 
 	userID, err := auth.GetUserID(c)
 	if err != nil {

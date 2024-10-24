@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -17,10 +18,19 @@ func GzipMiddleware() gin.HandlerFunc {
 		if strings.Contains(c.GetHeader("Content-Encoding"), "gzip") {
 			reader, err := gzip.NewReader(c.Request.Body)
 			if err != nil {
-				c.AbortWithError(http.StatusBadRequest, errors.New("контент не заархивирован"))
+				err := c.AbortWithError(http.StatusBadRequest, errors.New("контент не заархивирован"))
+				if err != nil {
+					log.Fatalf("Не смог ответить ошибкой")
+				}
 				return
 			}
-			defer reader.Close()
+
+			defer func() {
+				if errRender := reader.Close(); errRender != nil {
+					log.Printf("Ошибка при рендеринге middleware: %v", errRender)
+				}
+			}()
+
 			c.Request.Body = io.NopCloser(reader)
 		}
 
@@ -36,11 +46,19 @@ func GzipMiddleware() gin.HandlerFunc {
 				c.Writer.Header().Set("Content-Encoding", "gzip")
 				c.Writer.Header().Del("Content-Length")
 				gz := gzip.NewWriter(c.Writer)
-				defer gz.Close()
+
+				defer func() {
+					if errZip := gz.Close(); errZip != nil {
+						log.Printf("Ошибка запаковке ответа в middleware: %v", errZip)
+					}
+				}()
 
 				_, err := gz.Write(buffer.Bytes())
 				if err != nil {
-					c.AbortWithError(http.StatusBadRequest, errors.New("не смог записать в ответ"))
+					err := c.AbortWithError(http.StatusBadRequest, errors.New("не смог записать в ответ"))
+					if err != nil {
+						log.Fatalf("Не смог ответить ошибкой")
+					}
 					return
 				}
 				return

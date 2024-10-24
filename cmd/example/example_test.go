@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -43,7 +44,11 @@ func TestWebInterfaceShort(t *testing.T) {
 	// Отправка запроса
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if errBodyClose := resp.Body.Close(); errBodyClose != nil {
+			log.Printf("Ошибка при закрытии чтения тела ответа: %v", errBodyClose)
+		}
+	}()
 }
 
 func TestWebInterfacePing(t *testing.T) {
@@ -58,7 +63,11 @@ func TestWebInterfacePing(t *testing.T) {
 	// Отправка запроса
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if errBodyClose := resp.Body.Close(); errBodyClose != nil {
+			log.Printf("Ошибка при закрытии чтения тела ответа: %v", errBodyClose)
+		}
+	}()
 }
 
 func TestWebInterfaceFull(t *testing.T) {
@@ -73,7 +82,11 @@ func TestWebInterfaceFull(t *testing.T) {
 	// Отправка запроса
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if errBodyClose := resp.Body.Close(); errBodyClose != nil {
+			log.Printf("Ошибка при закрытии чтения тела ответа: %v", errBodyClose)
+		}
+	}()
 
 }
 
@@ -96,7 +109,11 @@ func TestWebInterfaceShortenJSON(t *testing.T) {
 	// Отправка запроса
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if errBodyClose := resp.Body.Close(); errBodyClose != nil {
+			log.Printf("Ошибка при закрытии чтения тела ответа: %v", errBodyClose)
+		}
+	}()
 }
 
 func TestWebInterfaceShortenJSONBatch(t *testing.T) {
@@ -118,7 +135,11 @@ func TestWebInterfaceShortenJSONBatch(t *testing.T) {
 	// Отправка запроса
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if errBodyClose := resp.Body.Close(); errBodyClose != nil {
+			log.Printf("Ошибка при закрытии чтения тела ответа: %v", errBodyClose)
+		}
+	}()
 
 }
 
@@ -137,7 +158,11 @@ func TestWebInterfaceGetAllShortURLByCookie(t *testing.T) {
 	// Отправка запроса
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		if errBodyClose := resp.Body.Close(); errBodyClose != nil {
+			log.Printf("Ошибка при закрытии чтения тела ответа: %v", errBodyClose)
+		}
+	}()
 
 }
 
@@ -160,7 +185,9 @@ func TestWebInterfaceDeleteShortURL(t *testing.T) {
 	// Отправка запроса
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	defer resp.Body.Close()
-
-	// Проверка ожидаемого статуса ответа
+	defer func() {
+		if errBodyClose := resp.Body.Close(); errBodyClose != nil {
+			log.Printf("Ошибка при закрытии чтения тела ответа: %v", errBodyClose)
+		}
+	}()
 }

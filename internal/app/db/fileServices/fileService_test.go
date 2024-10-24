@@ -2,6 +2,7 @@ package fileservices
 
 import (
 	"context"
+	"log"
 	"os"
 	"testing"
 
@@ -22,7 +23,11 @@ func TestFileStorage(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, fs)
 
-	defer os.Remove(filePath)
+	defer func() {
+		if errBodyClose := os.Remove(filePath); errBodyClose != nil {
+			log.Printf("Ошибка не смог удалить файл: %v", errBodyClose)
+		}
+	}()
 
 	ctx := context.Background()
 

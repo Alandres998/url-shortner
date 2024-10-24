@@ -17,7 +17,14 @@ func NewStorage() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
 
 	var store storage.Storage
 	var message string

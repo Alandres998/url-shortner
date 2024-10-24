@@ -3,6 +3,7 @@ package serverservices
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -21,7 +22,10 @@ func setupRouter() *gin.Engine {
 }
 
 func TestMain(m *testing.M) {
-	os.Setenv("RUN_MODE", "test")
+	err := os.Setenv("RUN_MODE", "test")
+	if err != nil {
+		log.Printf("Ошибка не смог получить env: %v", err)
+	}
 	config.InitConfig()
 	storagefactory.NewStorage()
 	code := m.Run()

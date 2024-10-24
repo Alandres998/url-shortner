@@ -22,7 +22,14 @@ func NewDBStorage(dsn string) (storage.Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {

@@ -1,6 +1,7 @@
 package auth_test
 
 import (
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,7 +48,11 @@ func TestSetUserCookie(t *testing.T) {
 	auth.SetUserCookie(c, "user123")
 
 	result := w.Result()
-	defer result.Body.Close()
+	defer func() {
+		if errBodyClose := result.Body.Close(); errBodyClose != nil {
+			log.Printf("Ошибка при закрытии чтения тела ответа: %v", errBodyClose)
+		}
+	}()
 
 	cookies := result.Cookies()
 
@@ -70,7 +75,11 @@ func TestGetUserID_Success(t *testing.T) {
 	})
 
 	c.Request = httptest.NewRequest("GET", "/", nil)
-	c.Request.Body.Close()
+	err = c.Request.Body.Close()
+	if err != nil {
+		log.Printf("Ошибка при закрытии чтения тела ответа: %v", err)
+	}
+
 	c.Request.AddCookie(&http.Cookie{
 		Name:  auth.CookieName,
 		Value: token,
@@ -132,7 +141,12 @@ func BenchmarkGetUserID(b *testing.B) {
 	auth.SetUserCookie(c, userID)
 
 	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
-	c.Request.Body.Close()
+
+	err := c.Request.Body.Close()
+	if err != nil {
+		log.Printf("Ошибка при закрытии чтения тела ответа: %v", err)
+	}
+
 	c.Request.AddCookie(&http.Cookie{
 		Name:  auth.CookieName,
 		Value: userID,
@@ -155,7 +169,12 @@ func BenchmarkGetUserIDByCookie(b *testing.B) {
 	auth.SetUserCookie(c, userID)
 
 	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
-	c.Request.Body.Close()
+
+	err := c.Request.Body.Close()
+	if err != nil {
+		log.Printf("Ошибка при закрытии чтения тела ответа: %v", err)
+	}
+
 	c.Request.AddCookie(&http.Cookie{
 		Name:  auth.CookieName,
 		Value: userID,
@@ -199,7 +218,12 @@ func BenchmarkSetCookieUseInRequest(b *testing.B) {
 	}
 
 	c.Request = httptest.NewRequest(http.MethodGet, "/", nil)
-	c.Request.Body.Close()
+
+	err = c.Request.Body.Close()
+	if err != nil {
+		log.Printf("Ошибка при закрытии чтения тела ответа: %v", err)
+	}
+
 	c.Request.AddCookie(&http.Cookie{
 		Name:  auth.CookieName,
 		Value: token,

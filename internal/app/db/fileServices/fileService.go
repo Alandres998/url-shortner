@@ -43,7 +43,15 @@ func (fs *FileStorage) initFileStorage() error {
 	if err != nil {
 		log.Fatalf("Не смог инициализировать логгер")
 	}
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
+
 	fs.lastIncrement = 0
 	urlSlice, err := fs.readOrCreateFile(fs.filePath)
 	if err != nil {
@@ -59,15 +67,44 @@ func (fs *FileStorage) initFileStorage() error {
 // readOrCreateFile читает данные из файла или создает новый файл, если он не существует.
 // Возвращает срез URLData и ошибку, если возникли проблемы.
 func (fs *FileStorage) readOrCreateFile(filePath string) ([]storage.URLData, error) {
-	var items []storage.URLData
-	fs.lastIncrement = 0
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
+	// Открытие файла
+	file, err := fs.openFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось открыть файл: %v", err)
 	}
-	defer file.Close()
+	defer fs.closeFile(file)
 
+	// Чтение и парсинг данных из файла
+	items, err := fs.readFileData(file)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось прочитать или распарсить файл: %v", err)
+	}
+
+	return items, nil
+}
+
+// openFile открывает файл для чтения и записи или создает новый файл, если его не существует.
+func (fs *FileStorage) openFile(filePath string) (*os.File, error) {
+	fs.lastIncrement = 0
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
+}
+
+// closeFile закрывает файл и выводит сообщение об ошибке, если это не удалось.
+func (fs *FileStorage) closeFile(file *os.File) {
+	if err := file.Close(); err != nil {
+		log.Printf("Ошибка при закрытии файла: %v", err)
+	}
+}
+
+// readFileData читает и парсит данные из файла, обновляет последний инкремент ID.
+func (fs *FileStorage) readFileData(file *os.File) ([]storage.URLData, error) {
+	var items []storage.URLData
 	scanner := bufio.NewScanner(file)
+
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		if len(line) == 0 {
@@ -75,9 +112,8 @@ func (fs *FileStorage) readOrCreateFile(filePath string) ([]storage.URLData, err
 		}
 		var item storage.URLData
 		if err := json.Unmarshal(line, &item); err != nil {
-			return nil, fmt.Errorf("не удалось распарсить файл: %v", err)
+			return nil, fmt.Errorf("не удалось распарсить данные: %v", err)
 		}
-
 		if item.ID > fs.lastIncrement {
 			fs.lastIncrement = item.ID
 		}
@@ -98,7 +134,14 @@ func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
 	if err != nil {
 		log.Fatalf("Не смог инициализировать логгер")
 	}
-	defer logger.Sync()
+
+	defer func() {
+		if errLoger := logger.Sync(); errLoger != nil {
+			logger.Error("Проблемы при закрытии логера",
+				zap.String("Не смог закрыть логгер", errLoger.Error()),
+			)
+		}
+	}()
 
 	file, err := os.OpenFile(config.Options.FileStorage.Path, os.O_APPEND|config.Options.FileStorage.Mode, 0644)
 	if err != nil {
@@ -107,7 +150,12 @@ func (fs *FileStorage) WriteInStorage(shortURL storage.URLData) {
 		)
 		return
 	}
-	defer file.Close()
+
+	defer func() {
+		if errFile := file.Close(); errFile != nil {
+			log.Printf("Ошибка при закрытии чтения файла: %v", errFile)
+		}
+	}()
 
 	jsonData, err := json.Marshal(shortURL)
 	if err != nil {
@@ -217,7 +265,11 @@ func (fs *FileStorage) writeAllData() {
 		zap.L().Error("Ошибка при открытии файла", zap.Error(err))
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("Ошибка при закрытии чтения файла: %v", err)
+		}
+	}()
 
 	for _, urlData := range fs.urlData {
 		jsonData, err := json.Marshal(urlData)
