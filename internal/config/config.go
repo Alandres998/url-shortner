@@ -16,6 +16,7 @@ var Options struct {
 	SSLConfig    SSLConfig
 }
 
+// SSLConfig информация о том где искать сертификат
 type SSLConfig struct {
 	CertFile string
 	KeyFile  string
