@@ -24,9 +24,9 @@ func RunServer() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
-	// Создание контекста с таймаутом
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel() // Отмена контекста при завершении работы main
+	shutdownTimeout := 15 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
 
 	storagefactory.NewStorage()
 	cfg := config.Options.ServerAdress
@@ -42,24 +42,23 @@ func RunServer() {
 	go func() {
 		if config.Options.EnableHTTPS {
 			log.Println("Запуск сервера с HTTPS...")
-			if err := server.ListenAndServeTLS(config.Options.SSLConfig.CertFile, config.Options.SSLConfig.KeyFile); err != nil {
+			if err := server.ListenAndServeTLS(config.Options.SSLConfig.CertFile, config.Options.SSLConfig.KeyFile); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("Ошибка запуска HTTPS-сервера: %s\n", err)
 			}
 		} else {
 			log.Println("Запуск сервера с HTTP...")
-			if err := server.ListenAndServe(); err != nil {
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("Ошибка запуска HTTP-сервера: %s\n", err)
 			}
 		}
 	}()
 
 	<-signalChan
-
 	log.Println("Получен сигнал для завершения работы сервера...")
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Ошибка при завершении работы сервера: %s", err)
+		log.Printf("Ошибка при завершении работы сервера: %s", err)
+	} else {
+		log.Println("Сервер завершил работу корректно.")
 	}
-
-	log.Println("Сервер завершил работу корректно.")
 }
