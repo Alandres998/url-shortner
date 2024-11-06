@@ -137,7 +137,7 @@ func determineStorageType() {
 	}
 }
 
-// loadJson Чтение конфига из json
+// loadConfigJSON Чтение конфига из json
 func loadConfigJSON() {
 	configFilePath := flag.String("c", "", "config file path")
 	flag.StringVar(configFilePath, "config", "", "config file path")
