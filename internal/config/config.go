@@ -55,7 +55,7 @@ func InitConfig() {
 	}
 	parseFlags()
 	loadEnv()
-	loadConfigJson()
+	loadConfigJSON()
 	loadConfigFile()
 	determineStorageType()
 }
@@ -138,7 +138,7 @@ func determineStorageType() {
 }
 
 // loadJson Чтение конфига из json
-func loadConfigJson() {
+func loadConfigJSON() {
 	configFilePath := flag.String("c", "", "config file path")
 	flag.StringVar(configFilePath, "config", "", "config file path")
 
