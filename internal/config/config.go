@@ -12,6 +12,13 @@ var Options struct {
 	FileStorage  FileStorageConfig
 	DatabaseDSN  string
 	StorageType  string
+	EnableHTTPS  bool
+	SSLConfig    SSLConfig
+}
+
+type SSLConfig struct {
+	CertFile string
+	KeyFile  string
 }
 
 // ServerConfig конфигурация сервера
@@ -68,6 +75,9 @@ func parseFlags() {
 	flag.StringVar(&Options.ServerAdress.ShortURL, "b", "http://localhost:8080", "short response address")
 	flag.StringVar(&Options.FileStorage.Path, "f", "", "storage file")
 	flag.StringVar(&Options.DatabaseDSN, "d", "", "database DSN")
+	flag.BoolVar(&Options.EnableHTTPS, "s", false, "enable HTTPS")
+	flag.StringVar(&Options.SSLConfig.CertFile, "cert", "server.crt", "path to SSL certificate") //Чет в задании не было про подсовывание ключей для http.ListenAndServeTLS
+	flag.StringVar(&Options.SSLConfig.KeyFile, "key", "server.key", "path to SSL key")
 	flag.Parse()
 }
 
@@ -85,6 +95,17 @@ func loadEnv() {
 
 	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
 		Options.DatabaseDSN = envDatabaseDSN
+	}
+
+	if envEnableHTTPS := os.Getenv("ENABLE_HTTPS"); envEnableHTTPS == "true" {
+		Options.EnableHTTPS = true
+	}
+
+	if envCertFile := os.Getenv("SSL_CERT_FILE"); envCertFile != "" {
+		Options.SSLConfig.CertFile = envCertFile
+	}
+	if envKeyFile := os.Getenv("SSL_KEY_FILE"); envKeyFile != "" {
+		Options.SSLConfig.KeyFile = envKeyFile
 	}
 }
 

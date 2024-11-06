@@ -25,7 +25,15 @@ func RunServer() {
 		Handler: routersInit,
 	}
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("Ахтунг сервер прилег: %s\n", err)
+	if config.Options.EnableHTTPS {
+		log.Println("Запуск сервера с HTTPS...")
+		if err := server.ListenAndServeTLS(config.Options.SSLConfig.CertFile, config.Options.SSLConfig.KeyFile); err != nil {
+			log.Fatalf("Ошибка запуска HTTPS-сервера: %s\n", err)
+		}
+	} else {
+		log.Println("Запуск сервера с HTTP...")
+		if err := server.ListenAndServe(); err != nil {
+			log.Fatalf("Ошибка запуска HTTP-сервера: %s\n", err)
+		}
 	}
 }
