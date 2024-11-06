@@ -1,36 +1,41 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 )
 
-// Options общая конфигурация проекта
-var Options struct {
+// OptionsStruct структура с настройками
+type OptionsStruct struct {
 	ServerAdress ServerConfig
 	FileStorage  FileStorageConfig
-	DatabaseDSN  string
-	StorageType  string
-	EnableHTTPS  bool
+	DatabaseDSN  string `json:"database_dsn"`
+	StorageType  string `json:"storage_type"`
+	EnableHTTPS  bool   `json:"enable_https"`
 	SSLConfig    SSLConfig
 }
 
+// Options общая конфигурация проекта
+var Options OptionsStruct
+
 // SSLConfig информация о том где искать сертификат
 type SSLConfig struct {
-	CertFile string
-	KeyFile  string
+	CertFile string `json:"ssl_cert_file"`
+	KeyFile  string `json:"ssl_key_file"`
 }
 
 // ServerConfig конфигурация сервера
 type ServerConfig struct {
-	MainURLServer string
-	ShortURL      string
+	MainURLServer string `json:"server_address"`
+	ShortURL      string `json:"base_url"`
 }
 
 // FileStorageConfig конфигурация файлового хранилища
 type FileStorageConfig struct {
-	Path string
+	Path string `json:"file_storage_path"`
 	Mode int
 }
 
@@ -50,6 +55,7 @@ func InitConfig() {
 	}
 	parseFlags()
 	loadEnv()
+	loadConfigJson()
 	loadConfigFile()
 	determineStorageType()
 }
@@ -128,5 +134,74 @@ func determineStorageType() {
 		Options.StorageType = StorageTypeFile
 	} else {
 		Options.StorageType = StorageTypeMemory
+	}
+}
+
+// loadJson Чтение конфига из json
+func loadConfigJson() {
+	configFilePath := flag.String("c", "", "config file path")
+	flag.StringVar(configFilePath, "config", "", "config file path")
+
+	if envConfigPath := os.Getenv("CONFIG"); envConfigPath != "" && *configFilePath == "" {
+		*configFilePath = envConfigPath
+	}
+
+	if *configFilePath != "" {
+		var configFromFile = OptionsStruct{}
+		var serverAdress = ServerConfig{}
+		var fileStorage = FileStorageConfig{}
+		var sslConfig = SSLConfig{}
+		file, err := os.ReadFile(*configFilePath)
+		if err != nil {
+			log.Fatalf("Ошибка чтения конфигурационного файла: %v", err)
+		}
+
+		err = json.Unmarshal(file, &configFromFile)
+		if err != nil {
+			log.Fatalf("Ошибка парсинга конфигурационного файла: %v", err)
+		}
+
+		err = json.Unmarshal(file, &serverAdress)
+		if err != nil {
+			log.Fatalf("Ошибка парсинга конфигурационного файла сервера: %v", err)
+		}
+
+		err = json.Unmarshal(file, &fileStorage)
+		if err != nil {
+			log.Fatalf("Ошибка парсинга конфигурационного файла хранилища: %v", err)
+		}
+
+		err = json.Unmarshal(file, &sslConfig)
+		if err != nil {
+			log.Fatalf("Ошибка парсинга конфигурационного файла сертификата: %v", err)
+		}
+		configFromFile.ServerAdress = serverAdress
+		configFromFile.FileStorage = fileStorage
+		configFromFile.SSLConfig = sslConfig
+
+		if Options.ServerAdress.MainURLServer == "" {
+			Options.ServerAdress.MainURLServer = configFromFile.ServerAdress.MainURLServer
+		}
+		if Options.ServerAdress.ShortURL == "" {
+			Options.ServerAdress.ShortURL = configFromFile.ServerAdress.ShortURL
+		}
+		if Options.FileStorage.Path == "" {
+			Options.FileStorage.Path = configFromFile.FileStorage.Path
+		}
+		if Options.FileStorage.Mode != 0 {
+			Options.FileStorage.Mode = configFromFile.FileStorage.Mode
+		}
+		if Options.DatabaseDSN == "" {
+			Options.DatabaseDSN = configFromFile.DatabaseDSN
+		}
+		if !Options.EnableHTTPS {
+			Options.EnableHTTPS = configFromFile.EnableHTTPS
+		}
+		if Options.SSLConfig.CertFile == "" {
+			Options.SSLConfig.CertFile = configFromFile.SSLConfig.CertFile
+		}
+		if Options.SSLConfig.KeyFile == "" {
+			Options.SSLConfig.KeyFile = configFromFile.SSLConfig.KeyFile
+		}
 	}
 }

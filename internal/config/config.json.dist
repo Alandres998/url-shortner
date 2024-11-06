@@ -1,0 +1,6 @@
+{
+    "server_address": ":8080",
+    "base_url": "http://localhost:8080", 
+    "database_dsn": "postgres://postgres:example@db_yandex:5432/postgres?sslmode=disable",
+    "enable_https": false
+} 
