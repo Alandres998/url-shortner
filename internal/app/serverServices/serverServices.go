@@ -40,25 +40,28 @@ func RunServer() {
 	}
 
 	go func() {
-		if config.Options.EnableHTTPS {
-			log.Println("Запуск сервера с HTTPS...")
-			if err := server.ListenAndServeTLS(config.Options.SSLConfig.CertFile, config.Options.SSLConfig.KeyFile); err != nil && err != http.ErrServerClosed {
-				log.Fatalf("Ошибка запуска HTTPS-сервера: %s\n", err)
-			}
-		} else {
-			log.Println("Запуск сервера с HTTP...")
-			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				log.Fatalf("Ошибка запуска HTTP-сервера: %s\n", err)
-			}
+		if err := startServer(server, config.Options.EnableHTTPS, config.Options.SSLConfig); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Ошибка запуска сервера: %s\n", err)
 		}
 	}()
 
 	<-signalChan
 	log.Println("Получен сигнал для завершения работы сервера...")
 
+	// Завершение работы сервера
 	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("Ошибка при завершении работы сервера: %s", err)
 	} else {
 		log.Println("Сервер завершил работу корректно.")
 	}
+}
+
+func startServer(server *http.Server, enableHTTPS bool, sslConfig config.SSLConfig) error {
+	if enableHTTPS {
+		log.Println("Запуск сервера с HTTPS...")
+		return server.ListenAndServeTLS(sslConfig.CertFile, sslConfig.KeyFile)
+	}
+
+	log.Println("Запуск сервера с HTTP...")
+	return server.ListenAndServe()
 }
