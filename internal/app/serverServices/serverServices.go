@@ -48,9 +48,11 @@ func RunServer() {
 	<-signalChan
 	log.Println("Получен сигнал для завершения работы сервера...")
 
-	// Завершение работы сервера
+	// Завершение работы сервера с обработкой таймаута контекста
 	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("Ошибка при завершении работы сервера: %s", err)
+	} else if ctx.Err() == context.DeadlineExceeded {
+		log.Println("Ушел в таймаут при завершении")
 	} else {
 		log.Println("Сервер завершил работу корректно.")
 	}
