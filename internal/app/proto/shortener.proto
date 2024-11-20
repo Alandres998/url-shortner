@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package urlshortener;
+
+option go_package = "github.com/Alandres998/url-shortner/internal/app/proto;grpc";
+
+service URLShortener {
+    rpc CreateURL (CreateURLRequest) returns (CreateURLResponse);
+    rpc GetURL (GetURLRequest) returns (GetURLResponse);
+  }
+  
+  message CreateURLRequest {
+    string original_url = 1;
+  }
+  
+  message CreateURLResponse {
+    string short_url = 1;
+  }
+  
+  message GetURLRequest {
+    string short_url = 1;
+  }
+  
+  message GetURLResponse {
+    string original_url = 1;
+  }

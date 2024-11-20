@@ -115,6 +115,28 @@ func Shorter(c *gin.Context) (string, error) {
 	return shortedCode, err
 }
 
+func ShorterGeneral(ctx context.Context, userID string, originalURL string) (string, error) {
+	codeURL := shortener.GenerateShortURL()
+	shortedCode := fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, codeURL)
+
+	err := storage.Store.Set(ctx, userID, codeURL, originalURL)
+	if err != nil {
+		if errors.Is(err, storage.ErrURLExists) {
+			URLStore, errDB := storage.Store.GetbyOriginURL(ctx, originalURL)
+			if errDB == nil {
+				URLStore.ShortURL = fmt.Sprintf("%s/%s", config.Options.ServerAdress.ShortURL, URLStore.ShortURL)
+				shortedCode = URLStore.ShortURL
+			} else {
+				log.Printf("Error getting URL from storage: %v", errDB)
+			}
+		} else {
+			log.Printf("Error saving shortened URL: %v", err)
+		}
+	}
+
+	return shortedCode, err
+}
+
 // ShorterJSON Веб-Сервис сокращения ссылок присланных application/json
 func ShorterJSON(c *gin.Context) (ShortenResponse, error) {
 	ctx := context.Background()

@@ -17,6 +17,7 @@ type OptionsStruct struct {
 	EnableHTTPS   bool   `json:"enable_https"`
 	SSLConfig     SSLConfig
 	TrustedSubnet string `json:"trusted_subnet"`
+	GRPCPort      string `json:"grpc_port"`
 }
 
 // Options общая конфигурация проекта
@@ -59,6 +60,7 @@ func InitConfig() {
 	loadConfigJSON()
 	loadConfigFile()
 	determineStorageType()
+	loadGRPCPort()
 }
 
 // InitConfigExample инициализация конфига для теста
@@ -210,4 +212,11 @@ func setOptionIfEmptyInt(target *int, value int) {
 // stringToBool Костыль для env с целью преобразования текста в bool
 func stringToBool(value string) bool {
 	return value == "true"
+}
+
+func loadGRPCPort() {
+	setOptionIfEmpty(&Options.GRPCPort, os.Getenv("GRPC_PORT"))
+	if Options.GRPCPort == "" {
+		Options.GRPCPort = ":50051"
+	}
 }
