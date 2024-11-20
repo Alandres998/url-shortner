@@ -87,3 +87,8 @@ func (m *MockStorage) DeleteUserURL(ctx context.Context, urls []string, userID s
 	}
 	return nil
 }
+
+// GetStatistics возвращает количество сокращенных ссылок и уникальных пользователей.
+func (m *MockStorage) GetStatistics(ctx context.Context) (int, int, error) {
+	panic("тест")
+}
