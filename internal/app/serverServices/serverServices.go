@@ -58,6 +58,7 @@ func RunServer() {
 	}
 }
 
+// startServer иницирует запуск сервера
 func startServer(server *http.Server, enableHTTPS bool, sslConfig config.SSLConfig) error {
 	if enableHTTPS {
 		log.Println("Запуск сервера с HTTPS...")

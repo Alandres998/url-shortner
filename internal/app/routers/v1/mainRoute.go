@@ -125,3 +125,17 @@ func WebInterfaceDeleteShortURL(c *gin.Context) {
 	}()
 	c.String(http.StatusAccepted, "")
 }
+
+// WebInterfaceStats Веб инетрфейс для контролера по получению статистики
+func WebInterfaceStats(c *gin.Context) {
+	var statusCode int
+
+	responseJSON, err := webservices.GetStatisticsShortURL(c)
+	if err != nil {
+		statusCode = http.StatusForbidden
+	} else {
+		statusCode = http.StatusOK
+	}
+
+	c.JSON(statusCode, responseJSON)
+}

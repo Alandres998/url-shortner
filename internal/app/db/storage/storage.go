@@ -35,6 +35,9 @@ type Storage interface {
 
 	// Ping метод для проверки доступности
 	Ping(ctx context.Context) error
+
+	// GetStatistics получить иннформацию о количестве сокращенных ссылок и уникальных пользователях
+	GetStatistics(ctx context.Context) (int, int, error)
 }
 
 // ErrURLExists возвращается, когда URL уже существует в хранилище.
