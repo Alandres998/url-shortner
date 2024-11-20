@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storagefactory"
+	"github.com/Alandres998/url-shortner/internal/app/proto"
 	"github.com/Alandres998/url-shortner/internal/app/routers"
+	v2 "github.com/Alandres998/url-shortner/internal/app/routers/v2"
 	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
@@ -41,7 +43,10 @@ func RunServer() {
 	}
 
 	// gRPC сервер
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(v2.EnsureUserIDInterceptor()),
+	)
+	proto.RegisterURLShortenerServiceServer(grpcServer, &v2.URLShortenerServer{})
 
 	go func() {
 		if err := startServer(server, config.Options.EnableHTTPS, config.Options.SSLConfig); err != nil && err != http.ErrServerClosed {
