@@ -110,3 +110,30 @@ func (s *URLShortenerServer) GetOriginalURL(ctx context.Context, req *proto.GetO
 		OriginalUrl: originalURL,
 	}, nil
 }
+
+// GetOriginalURL Получить ссылки пользователя
+func (s *URLShortenerServer) GetUserURLs(ctx context.Context, req *proto.GetUserURLsRequest) (*proto.GetUserURLsResponse, error) {
+	userID := req.UserId
+	if userID == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id не может быть пустым")
+	}
+
+	urls, err := storage.Store.GetUserURLs(context.Background(), userID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if len(urls) == 0 {
+		return nil, status.Error(codes.NotFound, "URLs не найдены")
+	}
+
+	response := &proto.GetUserURLsResponse{}
+	for _, url := range urls {
+		response.Urls = append(response.Urls, &proto.UserURL{
+			ShortUrl:    url.ShortURL,
+			OriginalUrl: url.OriginalURL,
+		})
+	}
+
+	return response, nil
+}
