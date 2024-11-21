@@ -17,6 +17,7 @@ import (
 	"github.com/Alandres998/url-shortner/internal/config"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func RunServer() {
@@ -48,6 +49,8 @@ func RunServer() {
 	)
 	proto.RegisterURLShortenerServiceServer(grpcServer, &v2.URLShortenerServer{})
 
+	// Регистрация рефлексии
+	reflection.Register(grpcServer)
 	go func() {
 		if err := startServer(server, config.Options.EnableHTTPS, config.Options.SSLConfig); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Ошибка запуска HTTP сервера: %s\n", err)

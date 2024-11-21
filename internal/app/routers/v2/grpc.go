@@ -63,7 +63,7 @@ func GetUserIDFromContext(ctx context.Context) (string, error) {
 	return userIDs[0], nil
 }
 
-func (s *URLShortenerServer) ShortenURL(ctx context.Context, req *proto.CreateShortURLRequest) (*proto.CreateShortURLResponse, error) {
+func (s *URLShortenerServer) CreateShortURL(ctx context.Context, req *proto.CreateShortURLRequest) (*proto.CreateShortURLResponse, error) {
 	logger, errLog := zap.NewProduction()
 	if errLog != nil {
 		log.Fatalf("Не смог иницировать логгер")
