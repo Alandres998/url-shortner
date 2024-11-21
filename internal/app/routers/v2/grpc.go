@@ -137,3 +137,23 @@ func (s *URLShortenerServer) GetUserURLs(ctx context.Context, req *proto.GetUser
 
 	return response, nil
 }
+
+// DeleteUserURLs удалить ссылку пользваоетля
+func (s *URLShortenerServer) DeleteUserURLs(ctx context.Context, req *proto.DeleteUserURLsRequest) (*proto.DeleteUserURLsResponse, error) {
+	if len(req.ShortUrls) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "список short_urls не может быть пустым")
+	}
+
+	userID, err := GetUserIDFromContext(ctx)
+	if err != nil || userID == "" {
+		return nil, status.Error(codes.Unauthenticated, "не удалось определить user_id")
+	}
+
+	// Вызов бизнес-логики для удаления ссылок
+	err = storage.Store.DeleteUserURL(ctx, req.ShortUrls, userID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &proto.DeleteUserURLsResponse{Message: "URLs успешно удалены"}, nil
+}
