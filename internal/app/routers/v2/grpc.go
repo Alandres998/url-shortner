@@ -77,11 +77,11 @@ func (s *URLShortenerServer) CreateShortURL(ctx context.Context, req *proto.Crea
 		}
 	}()
 
-	usedId, err := GetUserIDFromContext(ctx)
+	userID, err := GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	shortURL, err := webservices.ShorterGeneral(ctx, usedId, req.OriginalUrl)
+	shortURL, err := webservices.ShorterGeneral(ctx, userID, req.OriginalUrl)
 	if err != nil {
 		if errors.Is(err, storage.ErrURLExists) {
 			return &proto.CreateShortURLResponse{
@@ -93,5 +93,20 @@ func (s *URLShortenerServer) CreateShortURL(ctx context.Context, req *proto.Crea
 
 	return &proto.CreateShortURLResponse{
 		ShortUrl: shortURL,
+	}, nil
+}
+
+// GetOriginalURL Получить полную ссылку
+func (s *URLShortenerServer) GetOriginalURL(ctx context.Context, req *proto.GetOriginalURLRequest) (*proto.GetOriginalURLResponse, error) {
+	originalURL, err := webservices.Fuller(ctx, req.ShortUrl)
+	if err != nil {
+		if err == storage.ErrURLDeleted {
+			return nil, status.Error(codes.NotFound, "URL was deleted")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &proto.GetOriginalURLResponse{
+		OriginalUrl: originalURL,
 	}, nil
 }

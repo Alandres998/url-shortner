@@ -49,7 +49,8 @@ func WebInterfaceShort(c *gin.Context) {
 
 // WebInterfaceShort Веб интерфейс вернуть полную ссылку
 func WebInterfaceFull(c *gin.Context) {
-	responseHeaderLocation, err := webservices.Fuller(c)
+	id := c.Param("id")
+	responseHeaderLocation, err := webservices.Fuller(c, id)
 	if err != nil {
 		if errors.Is(err, storage.ErrURLDeleted) {
 			webservices.GetErrorWithCode(c, err.Error(), http.StatusGone)
@@ -58,6 +59,7 @@ func WebInterfaceFull(c *gin.Context) {
 		}
 		return
 	}
+
 	c.Redirect(http.StatusTemporaryRedirect, responseHeaderLocation)
 }
 
