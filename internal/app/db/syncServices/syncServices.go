@@ -100,3 +100,23 @@ func (store *URLMap) DeleteUserURL(ctx context.Context, shortURLs []string, user
 
 	return nil
 }
+
+// GetStatistics получает информацию о количестве сокращенных ссылок и уникальных пользователях.
+func (store *URLMap) GetStatistics(ctx context.Context) (int, int, error) {
+	store.s.RLock()
+	defer store.s.RUnlock()
+
+	urlCount := 0
+	userSet := make(map[string]struct{})
+
+	for _, urlData := range store.m {
+		if !urlData.Deleted {
+			urlCount++
+		}
+		if urlData.UserID != "" {
+			userSet[urlData.UserID] = struct{}{}
+		}
+	}
+
+	return urlCount, len(userSet), nil
+}

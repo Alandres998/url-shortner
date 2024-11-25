@@ -35,6 +35,7 @@ func InitRouter() *gin.Engine {
 		apiRouteGroup.POST("/shorten/batch", v1.WebInterfaceShortenJSONBatch)
 		apiRouteGroup.GET("/user/urls", v1.WebInterfaceGetAllShortURLByCookie)
 		apiRouteGroup.DELETE("/user/urls", v1.WebInterfaceDeleteShortURL)
+		apiRouteGroup.GET("/internal/stats", middlewares.CheckTrustedSubnet(), v1.WebInterfaceStats)
 	}
 
 	//Регистрируем либу pprof

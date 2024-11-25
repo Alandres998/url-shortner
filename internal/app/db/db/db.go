@@ -162,3 +162,21 @@ func (s *DBStorage) DeleteUserURL(ctx context.Context, shortURLs []string, userI
 
 	return nil
 }
+
+// GetStatistics получить иннформацию о количестве сокращенных ссылок и уникальных пользователях
+func (s *DBStorage) GetStatistics(ctx context.Context) (int, int, error) {
+	urlCountQuery := `SELECT COUNT(*) FROM short_url WHERE NOT is_deleted;`
+	userCountQuery := `SELECT COUNT(DISTINCT user_id) FROM short_url WHERE user_id IS NOT NULL;`
+
+	var urlCount, userCount int
+
+	if err := s.db.GetContext(ctx, &urlCount, urlCountQuery); err != nil {
+		return 0, 0, err
+	}
+
+	if err := s.db.GetContext(ctx, &userCount, userCountQuery); err != nil {
+		return 0, 0, err
+	}
+
+	return urlCount, userCount, nil
+}

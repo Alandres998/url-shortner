@@ -10,12 +10,14 @@ import (
 
 // OptionsStruct структура с настройками
 type OptionsStruct struct {
-	ServerAdress ServerConfig
-	FileStorage  FileStorageConfig
-	DatabaseDSN  string `json:"database_dsn"`
-	StorageType  string `json:"storage_type"`
-	EnableHTTPS  bool   `json:"enable_https"`
-	SSLConfig    SSLConfig
+	ServerAdress  ServerConfig
+	FileStorage   FileStorageConfig
+	DatabaseDSN   string `json:"database_dsn"`
+	StorageType   string `json:"storage_type"`
+	EnableHTTPS   bool   `json:"enable_https"`
+	SSLConfig     SSLConfig
+	TrustedSubnet string `json:"trusted_subnet"`
+	GRPCPort      string `json:"grpc_port"`
 }
 
 // Options общая конфигурация проекта
@@ -58,6 +60,7 @@ func InitConfig() {
 	loadConfigJSON()
 	loadConfigFile()
 	determineStorageType()
+	loadGRPCPort()
 }
 
 // InitConfigExample инициализация конфига для теста
@@ -85,6 +88,7 @@ func parseFlags() {
 	flag.BoolVar(&Options.EnableHTTPS, "s", false, "enable HTTPS")
 	flag.StringVar(&Options.SSLConfig.CertFile, "cert", "server.crt", "path to SSL certificate") //Чет в задании не было про подсовывание ключей для http.ListenAndServeTLS
 	flag.StringVar(&Options.SSLConfig.KeyFile, "key", "server.key", "path to SSL key")
+	flag.StringVar(&Options.TrustedSubnet, "t", "", "trusted CIDR subnet")
 	flag.Parse()
 }
 
@@ -97,6 +101,7 @@ func loadEnv() {
 	setOptionIfEmptyBool(&Options.EnableHTTPS, stringToBool(os.Getenv("ENABLE_HTTPS")))
 	setOptionIfEmpty(&Options.SSLConfig.CertFile, os.Getenv("SSL_CERT_FILE"))
 	setOptionIfEmpty(&Options.SSLConfig.KeyFile, os.Getenv("SSL_KEY_FILE"))
+	setOptionIfEmpty(&Options.TrustedSubnet, os.Getenv("TRUSTED_SUBNET"))
 }
 
 // loadConfigFile Устанавливаем конфиг для файла хранилища
@@ -143,6 +148,7 @@ func loadConfigJSON() {
 	setOptionIfEmptyBool(&Options.EnableHTTPS, configFromFile.EnableHTTPS)
 	setOptionIfEmpty(&Options.SSLConfig.CertFile, configFromFile.SSLConfig.CertFile)
 	setOptionIfEmpty(&Options.SSLConfig.KeyFile, configFromFile.SSLConfig.KeyFile)
+	setOptionIfEmpty(&Options.TrustedSubnet, configFromFile.TrustedSubnet)
 }
 
 // parseFileConfigJSON парсинг файла JSON конфигурации
@@ -206,4 +212,11 @@ func setOptionIfEmptyInt(target *int, value int) {
 // stringToBool Костыль для env с целью преобразования текста в bool
 func stringToBool(value string) bool {
 	return value == "true"
+}
+
+func loadGRPCPort() {
+	setOptionIfEmpty(&Options.GRPCPort, os.Getenv("GRPC_PORT"))
+	if Options.GRPCPort == "" {
+		Options.GRPCPort = ":50051"
+	}
 }

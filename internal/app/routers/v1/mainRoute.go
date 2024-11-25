@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/Alandres998/url-shortner/internal/app/db/storage"
@@ -15,7 +16,24 @@ import (
 
 // WebInterfaceShort Веб интерфейс сокращения ссылок
 func WebInterfaceShort(c *gin.Context) {
-	responseText, err := webservices.Shorter(c)
+	ctx := c.Request.Context()
+	req := c.Request
+
+	userID, err := auth.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизваон"})
+		return
+	}
+
+	const maxBodySize = 1024 // 1MB
+	body, err := io.ReadAll(io.LimitReader(req.Body, maxBodySize))
+	if err != nil || len(body) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Чет не то написал в теле"})
+		return
+	}
+
+	originalURL := string(body)
+	responseText, err := webservices.ShorterGeneral(ctx, userID, originalURL)
 	statusCode := http.StatusCreated
 	if err != nil && errors.Is(err, storage.ErrURLExists) {
 		err = nil
@@ -31,7 +49,8 @@ func WebInterfaceShort(c *gin.Context) {
 
 // WebInterfaceShort Веб интерфейс вернуть полную ссылку
 func WebInterfaceFull(c *gin.Context) {
-	responseHeaderLocation, err := webservices.Fuller(c)
+	id := c.Param("id")
+	responseHeaderLocation, err := webservices.Fuller(c, id)
 	if err != nil {
 		if errors.Is(err, storage.ErrURLDeleted) {
 			webservices.GetErrorWithCode(c, err.Error(), http.StatusGone)
@@ -40,6 +59,7 @@ func WebInterfaceFull(c *gin.Context) {
 		}
 		return
 	}
+
 	c.Redirect(http.StatusTemporaryRedirect, responseHeaderLocation)
 }
 
@@ -124,4 +144,18 @@ func WebInterfaceDeleteShortURL(c *gin.Context) {
 		shortener.DeleteShortURL(userID, shortURLs)
 	}()
 	c.String(http.StatusAccepted, "")
+}
+
+// WebInterfaceStats Веб инетрфейс для контролера по получению статистики
+func WebInterfaceStats(c *gin.Context) {
+	var statusCode int
+
+	responseJSON, err := webservices.GetStatisticsShortURL(c)
+	if err != nil {
+		statusCode = http.StatusForbidden
+	} else {
+		statusCode = http.StatusOK
+	}
+
+	c.JSON(statusCode, responseJSON)
 }

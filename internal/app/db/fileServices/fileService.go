@@ -289,3 +289,23 @@ func (fs *FileStorage) writeAllData() {
 		}
 	}
 }
+
+// GetStatistics получает информацию о количестве сокращенных ссылок и уникальных пользователях.
+func (fs *FileStorage) GetStatistics(ctx context.Context) (int, int, error) {
+	fs.mu.RLock()
+	defer fs.mu.RUnlock()
+
+	urlCount := 0
+	userSet := make(map[string]struct{})
+
+	for _, urlData := range fs.urlData {
+		if !urlData.Deleted {
+			urlCount++
+		}
+		if urlData.UserID != "" {
+			userSet[urlData.UserID] = struct{}{}
+		}
+	}
+
+	return urlCount, len(userSet), nil
+}
